@@ -1,6 +1,9 @@
 import { defineBackend } from '@aws-amplify/backend';
-import { emailSignup } from './functions/email-signup/resource';
+import { emailSignup } from './email-signup/resource';
 
-const backend = defineBackend({
+/**
+ * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
+ */
+defineBackend({
   emailSignup,
 });

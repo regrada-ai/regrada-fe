@@ -44,3 +44,6 @@ next-env.d.ts
 amplify_outputs.json
 .amplify/
 amplify/functions/**/node_modules
+
+amplify_outputs*
+amplifyconfiguration*
