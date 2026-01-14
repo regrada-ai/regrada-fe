@@ -70,14 +70,14 @@ export const handler = async (event: SignupEvent) => {
               Html: {
                 Data: `
                   <html>
-                    <body style="font-family: monospace; background-color: #1D1F21; color: #C5C8C6; padding: 20px;">
-                      <h2 style="color: #81A2BE;">Welcome to Regrada!</h2>
-                      <p>Thank you for signing up for Regrada updates!</p>
-                      <p>We'll keep you posted on our launch and latest developments.</p>
-                      <p style="color: #969896; margin-top: 30px;">
+                    <body style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; background-color: #1D1F21; color: #C5C8C6; padding: 20px; margin: 0;">
+                      <h2 style="color: #81A2BE; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">Welcome to Regrada!</h2>
+                      <p style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">Thank you for signing up for Regrada updates!</p>
+                      <p style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">We'll keep you posted on our launch and latest developments.</p>
+                      <p style="color: #969896; margin-top: 30px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
                         <em>CI for AI behavior — catch regressions before they ship.</em>
                       </p>
-                      <p style="color: #969896; margin-top: 30px;">- The Regrada Team</p>
+                      <p style="color: #969896; margin-top: 30px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">- The Regrada Team</p>
                     </body>
                   </html>
                 `,
