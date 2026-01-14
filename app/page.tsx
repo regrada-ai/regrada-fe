@@ -5,15 +5,42 @@ import { useState } from 'react';
 export default function Home() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      // Here you would typically send the email to your backend
-      console.log('Email submitted:', email);
-      setIsSubmitted(true);
-      setEmail('');
-      setTimeout(() => setIsSubmitted(false), 3000);
+    if (!email) return;
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      // Call the Lambda function via API Gateway
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api/email-signup';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsSubmitted(true);
+        setEmail('');
+        setTimeout(() => setIsSubmitted(false), 5000);
+      } else {
+        setError(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (err) {
+      console.error('Signup error:', err);
+      setError('Failed to sign up. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -48,14 +75,20 @@ export default function Home() {
             />
             <button
               type="submit"
-              className="border border-[#81A2BE] bg-[#81A2BE]/10 px-6 py-3 font-semibold text-[#81A2BE] transition-all hover:bg-[#81A2BE] hover:text-[#1D1F21]"
+              disabled={isLoading}
+              className="border border-[#81A2BE] bg-[#81A2BE]/10 px-6 py-3 font-semibold text-[#81A2BE] transition-all hover:bg-[#81A2BE] hover:text-[#1D1F21] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Notify Me
+              {isLoading ? 'Submitting...' : 'Notify Me'}
             </button>
           </div>
           {isSubmitted && (
             <p className="mt-4 text-sm text-[#B5BD68]">
               ✓ Thanks! We&apos;ll keep you updated.
+            </p>
+          )}
+          {error && (
+            <p className="mt-4 text-sm text-[#CC6666]">
+              ✗ {error}
             </p>
           )}
         </form>
