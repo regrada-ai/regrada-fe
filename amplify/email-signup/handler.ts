@@ -1,12 +1,15 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
+import { SESv2Client, CreateContactCommand } from '@aws-sdk/client-sesv2';
 
 const snsClient = new SNSClient({});
 const sesClient = new SESClient({});
+const sesv2Client = new SESv2Client({});
 
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN || '';
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@regrada.com';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@regrada.com';
+const CONTACT_LIST_NAME = 'regrada-newsletter';
 
 interface SignupEvent {
   body: string;
@@ -35,7 +38,29 @@ export const handler = async (event: SignupEvent) => {
       };
     }
 
-    // Publish to SNS topic (for mailing list)
+    // Add contact to SES contact list
+    try {
+      await sesv2Client.send(
+        new CreateContactCommand({
+          ContactListName: CONTACT_LIST_NAME,
+          EmailAddress: email,
+          TopicPreferences: [
+            {
+              TopicName: 'newsletter',
+              SubscriptionStatus: 'OPT_IN',
+            },
+          ],
+        })
+      );
+    } catch (contactError) {
+      // If contact already exists, that's fine
+      const error = contactError as { name?: string };
+      if (error.name !== 'AlreadyExistsException') {
+        console.error('Error adding contact to list:', contactError);
+      }
+    }
+
+    // Publish to SNS topic (for notifications)
     if (SNS_TOPIC_ARN) {
       await snsClient.send(
         new PublishCommand({
