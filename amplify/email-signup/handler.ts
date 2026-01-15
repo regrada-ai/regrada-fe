@@ -30,7 +30,6 @@ export const handler = async (event: SignupEvent) => {
         statusCode: 400,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
         },
         body: JSON.stringify({ error: 'Invalid email address' }),
       };
@@ -121,7 +120,6 @@ export const handler = async (event: SignupEvent) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({
         success: true,
@@ -134,7 +132,6 @@ export const handler = async (event: SignupEvent) => {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({
         error: 'Failed to process signup. Please try again.'
