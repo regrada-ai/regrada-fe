@@ -39,6 +39,7 @@ export const handler = async (event: SignupEvent) => {
     }
 
     // Add contact to SES contact list
+    console.log('Attempting to add contact to list:', email);
     try {
       await sesv2Client.send(
         new CreateContactCommand({
@@ -52,9 +53,11 @@ export const handler = async (event: SignupEvent) => {
           ],
         })
       );
+      console.log('Successfully added contact to list');
     } catch (contactError) {
       // If contact already exists, that's fine
       const error = contactError as { name?: string };
+      console.error('Contact list error:', error.name, contactError);
       if (error.name !== 'AlreadyExistsException') {
         console.error('Error adding contact to list:', contactError);
       }
