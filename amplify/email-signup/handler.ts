@@ -1,9 +1,7 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
-import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
-import { SESv2Client, CreateContactCommand } from '@aws-sdk/client-sesv2';
+import { SESv2Client, CreateContactCommand, SendEmailCommand as SendEmailCommandV2 } from '@aws-sdk/client-sesv2';
 
 const snsClient = new SNSClient({});
-const sesClient = new SESClient({});
 const sesv2Client = new SESv2Client({});
 
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN || '';
@@ -78,24 +76,25 @@ export const handler = async (event: SignupEvent) => {
       );
     }
 
-    // Send confirmation email via SES
+    // Send confirmation email via SES with unsubscribe link
     try {
-      await sesClient.send(
-        new SendEmailCommand({
-          Source: FROM_EMAIL,
+      await sesv2Client.send(
+        new SendEmailCommandV2({
+          FromEmailAddress: FROM_EMAIL,
           Destination: {
             ToAddresses: [email],
           },
-          Message: {
-            Subject: {
-              Data: 'Welcome to Regrada!',
-            },
-            Body: {
-              Text: {
-                Data: `Thank you for signing up for Regrada updates!\n\nWe'll keep you posted on our launch and latest developments.\n\nCI for AI behavior — catch regressions before they ship.\n\n- The Regrada Team`,
+          Content: {
+            Simple: {
+              Subject: {
+                Data: 'Welcome to Regrada!',
               },
-              Html: {
-                Data: `
+              Body: {
+                Text: {
+                  Data: `Thank you for signing up for Regrada updates!\n\nWe'll keep you posted on our launch and latest developments.\n\nCI for AI behavior — catch regressions before they ship.\n\n- The Regrada Team`,
+                },
+                Html: {
+                  Data: `
                   <html>
                     <body style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; background-color: #1D1F21; color: #C5C8C6; padding: 20px; margin: 0;">
                       <h2 style="color: #81A2BE; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">Welcome to Regrada!</h2>
@@ -108,8 +107,13 @@ export const handler = async (event: SignupEvent) => {
                     </body>
                   </html>
                 `,
+                },
               },
             },
+          },
+          ListManagementOptions: {
+            ContactListName: CONTACT_LIST_NAME,
+            TopicName: 'newsletter',
           },
         })
       );
@@ -121,19 +125,21 @@ export const handler = async (event: SignupEvent) => {
     // Notify admin
     if (ADMIN_EMAIL && FROM_EMAIL) {
       try {
-        await sesClient.send(
-          new SendEmailCommand({
-            Source: FROM_EMAIL,
+        await sesv2Client.send(
+          new SendEmailCommandV2({
+            FromEmailAddress: FROM_EMAIL,
             Destination: {
               ToAddresses: [ADMIN_EMAIL],
             },
-            Message: {
-              Subject: {
-                Data: `New signup: ${email}`,
-              },
-              Body: {
-                Text: {
-                  Data: `New email signup:\n\nEmail: ${email}\nTimestamp: ${new Date().toISOString()}`,
+            Content: {
+              Simple: {
+                Subject: {
+                  Data: `New signup: ${email}`,
+                },
+                Body: {
+                  Text: {
+                    Data: `New email signup:\n\nEmail: ${email}\nTimestamp: ${new Date().toISOString()}`,
+                  },
                 },
               },
             },
