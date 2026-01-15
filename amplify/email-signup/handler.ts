@@ -78,6 +78,9 @@ export const handler = async (event: SignupEvent) => {
 
     // Send confirmation email via SES with unsubscribe link
     try {
+      // Small delay to ensure contact is fully registered in SES
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       await sesv2Client.send(
         new SendEmailCommandV2({
           FromEmailAddress: FROM_EMAIL,
@@ -91,7 +94,7 @@ export const handler = async (event: SignupEvent) => {
               },
               Body: {
                 Text: {
-                  Data: `Thank you for signing up for Regrada updates!\n\nWe'll keep you posted on our launch and latest developments.\n\nCI for AI behavior — catch regressions before they ship.\n\n- The Regrada Team`,
+                  Data: `Thank you for signing up for Regrada updates!\n\nWe'll keep you posted on our launch and latest developments.\n\nCI for AI behavior — catch regressions before they ship.\n\n- The Regrada Team\n\n---\nTo unsubscribe from these emails, click here: {{amazonSESUnsubscribeUrl}}`,
                 },
                 Html: {
                   Data: `
@@ -104,6 +107,10 @@ export const handler = async (event: SignupEvent) => {
                         <em>CI for AI behavior — catch regressions before they ship.</em>
                       </p>
                       <p style="color: #969896; margin-top: 30px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">- The Regrada Team</p>
+                      <hr style="border: none; border-top: 1px solid #373B41; margin: 40px 0;">
+                      <p style="color: #707880; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">
+                        <a href="{{amazonSESUnsubscribeUrl}}" style="color: #81A2BE; text-decoration: none;">Unsubscribe</a> from these emails
+                      </p>
                     </body>
                   </html>
                 `,
@@ -111,6 +118,7 @@ export const handler = async (event: SignupEvent) => {
               },
             },
           },
+          ConfigurationSetName: 'regrada-email-config',
           ListManagementOptions: {
             ContactListName: CONTACT_LIST_NAME,
             TopicName: 'newsletter',
