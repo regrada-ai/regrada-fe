@@ -1,1 +1,1 @@
-![regrada banner](public/regrada-banner-large.png)
+![regrada banner](public/regrada/regrada-banner-large.png)
