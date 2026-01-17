@@ -240,13 +240,13 @@ export default function PrivacyPage() {
           <p className="text-[color:var(--text-secondary)] leading-relaxed">
             Email:{" "}
             <a
-              href="mailto:privacy@regrada.ai"
+              href="mailto:privacy@regrada.com"
               className="text-[color:var(--accent)] transition-colors hover:text-[color:var(--text-primary)]"
             >
-              privacy@regrada.ai
+              privacy@regrada.com
             </a>
             <br />
-            Company: Regrada, Inc.
+            Company: Regrada
           </p>
         </section>
       </main>

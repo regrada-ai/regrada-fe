@@ -260,13 +260,13 @@ export default function TermsPage() {
           <p className="text-[color:var(--text-secondary)] leading-relaxed">
             Email:{" "}
             <a
-              href="mailto:legal@regrada.ai"
+              href="mailto:legal@regrada.com"
               className="text-[color:var(--accent)] transition-colors hover:text-[color:var(--text-primary)]"
             >
-              legal@regrada.ai
+              legal@regrada.com
             </a>
             <br />
-            Company: Regrada, Inc.
+            Company: Regrada
           </p>
         </section>
       </main>
