@@ -65,9 +65,32 @@ export default function Home() {
             Regrada is CI for LLM-powered systems. Detect behavioral changes, broken assumptions, and silent failures before your AI ships.
           </p>
 
-          <p className="mb-12 text-lg text-[color:var(--accent)] md:text-xl">
+          <p className="mb-8 text-lg text-[color:var(--accent)] md:text-xl">
             Run in your CI. Fail the build if behavior drifts.
           </p>
+
+          {/* Code Example */}
+          <div className="mb-12 w-full max-w-2xl">
+            <div className="rounded border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 text-left font-mono text-sm">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-red-500"></span>
+                <span className="h-3 w-3 rounded-full bg-yellow-500"></span>
+                <span className="h-3 w-3 rounded-full bg-green-500"></span>
+                <span className="ml-2 text-xs text-[color:var(--text-muted)]">terminal</span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[color:var(--text-muted)]">
+                  <span className="text-[color:var(--accent)]">$</span> regrada test
+                </p>
+                <p className="text-[color:var(--text-muted)]">Running AI behavior tests...</p>
+                <p className="text-green-400">✓ customer_support_flow</p>
+                <p className="text-green-400">✓ structured_output_format</p>
+                <p className="text-red-400">✗ tool_calling_sequence</p>
+                <p className="text-yellow-400 pl-4">Regression detected: function call order changed</p>
+                <p className="text-red-400 font-bold mt-2">Build failed: 1 regression detected</p>
+              </div>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-md">
             <div className="flex flex-col gap-4 sm:flex-row">
@@ -117,6 +140,28 @@ export default function Home() {
               <p><span className="text-[color:var(--accent)]">&gt;</span> Regrada checks every change.</p>
               <p><span className="text-[color:var(--accent)]">&gt;</span> If something breaks, it blocks the release.</p>
             </div>
+
+            {/* Before/After Comparison */}
+            <div className="mt-12 grid gap-6 md:grid-cols-2">
+              <div className="rounded border border-red-500/30 bg-red-950/20 p-6">
+                <h3 className="mb-4 font-bold text-red-400">Without Regrada</h3>
+                <div className="space-y-3 text-sm text-[color:var(--text-muted)]">
+                  <p>✗ Model updates break production</p>
+                  <p>✗ Prompt changes cause silent failures</p>
+                  <p>✗ No way to catch regressions early</p>
+                  <p>✗ Manual testing is slow & incomplete</p>
+                </div>
+              </div>
+              <div className="rounded border border-green-500/30 bg-green-950/20 p-6">
+                <h3 className="mb-4 font-bold text-green-400">With Regrada</h3>
+                <div className="space-y-3 text-sm text-[color:var(--text-muted)]">
+                  <p>✓ Regressions caught in CI</p>
+                  <p>✓ Every change is validated</p>
+                  <p>✓ Automated behavioral testing</p>
+                  <p>✓ Ship with confidence</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -131,9 +176,14 @@ export default function Home() {
             <div className="grid gap-12 md:grid-cols-2">
               {/* Behavioral Regression Detection */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Behavioral Regression Detection
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    🔍
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Behavioral Regression Detection
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Detect changes in:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> Model outputs</li>
@@ -149,9 +199,14 @@ export default function Home() {
 
               {/* Scenario-Based Testing */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Scenario-Based Testing for AI
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    🧪
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Scenario-Based Testing for AI
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Define real prompts and flows as tests:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> Multi-turn conversations</li>
@@ -159,6 +214,13 @@ export default function Home() {
                   <li><span className="text-[color:var(--accent)]">•</span> Edge cases & adversarial inputs</li>
                   <li><span className="text-[color:var(--accent)]">•</span> Golden responses & invariants</li>
                 </ul>
+                <div className="rounded border border-[var(--border-color)] bg-black/30 p-4 font-mono text-xs">
+                  <p className="text-purple-400">test</p>
+                  <p className="text-[color:var(--text-muted)]">  .scenario(<span className="text-green-400">&quot;support_refund&quot;</span>)</p>
+                  <p className="text-[color:var(--text-muted)]">  .prompt(<span className="text-green-400">&quot;I want a refund&quot;</span>)</p>
+                  <p className="text-[color:var(--text-muted)]">  .expect.toolCalled(<span className="text-green-400">&quot;check_order&quot;</span>)</p>
+                  <p className="text-[color:var(--text-muted)]">  .expect.tone(<span className="text-green-400">&quot;helpful&quot;</span>)</p>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">
                   AI tests that behave like production.
                 </p>
@@ -166,9 +228,14 @@ export default function Home() {
 
               {/* Deterministic Diffing */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Deterministic Diffing for Non-Deterministic Systems
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    📊
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Deterministic Diffing for Non-Deterministic Systems
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Regrada normalizes LLM output into comparable traces:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> Semantic diffs</li>
@@ -176,6 +243,15 @@ export default function Home() {
                   <li><span className="text-[color:var(--accent)]">•</span> Tolerance thresholds</li>
                   <li><span className="text-[color:var(--accent)]">•</span> Custom scoring rules</li>
                 </ul>
+                <div className="rounded border border-[var(--border-color)] bg-black/30 p-4 font-mono text-xs">
+                  <p className="text-[color:var(--text-muted)]">Baseline:</p>
+                  <p className="text-green-400 pl-2">+ Called: search_products</p>
+                  <p className="text-green-400 pl-2">+ Called: add_to_cart</p>
+                  <p className="text-[color:var(--text-muted)]">Current:</p>
+                  <p className="text-green-400 pl-2">+ Called: search_products</p>
+                  <p className="text-red-400 pl-2">- Called: check_inventory</p>
+                  <p className="text-yellow-400 mt-2">⚠ Tool sequence changed</p>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">
                   No more eyeballing prompt changes.
                 </p>
@@ -183,9 +259,14 @@ export default function Home() {
 
               {/* CI/CD Enforcement */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  CI / CD Enforcement
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    🚦
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    CI / CD Enforcement
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Run Regrada in:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> GitHub Actions</li>
@@ -193,6 +274,11 @@ export default function Home() {
                   <li><span className="text-[color:var(--accent)]">•</span> CircleCI</li>
                   <li><span className="text-[color:var(--accent)]">•</span> Jenkins</li>
                 </ul>
+                <div className="rounded border border-[var(--border-color)] bg-black/30 p-4 font-mono text-xs">
+                  <p className="text-blue-400">- name: <span className="text-green-400">Regrada AI Tests</span></p>
+                  <p className="text-blue-400">  run: <span className="text-[color:var(--text-muted)]">npx regrada test</span></p>
+                  <p className="text-gray-500 mt-2"># Blocks merge if AI behavior changed</p>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Fail builds on:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> Behavioral regressions</li>
@@ -206,9 +292,14 @@ export default function Home() {
 
               {/* Model-Agnostic */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Model-Agnostic & Vendor-Neutral
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    🔌
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Model-Agnostic & Vendor-Neutral
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Works with:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> OpenAI, Anthropic, Gemini</li>
@@ -222,9 +313,14 @@ export default function Home() {
 
               {/* Guardrails */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Prompt & Policy Guardrails
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    🧠
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Prompt & Policy Guardrails
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Enforce:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> Output schemas</li>
@@ -239,9 +335,14 @@ export default function Home() {
 
               {/* Drift Monitoring */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Drift & Stability Monitoring
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    📈
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Drift & Stability Monitoring
+                  </h3>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">Track behavior over time:</p>
                 <ul className="space-y-2 text-[color:var(--text-muted)]">
                   <li><span className="text-[color:var(--accent)]">•</span> Output variance</li>
@@ -249,6 +350,25 @@ export default function Home() {
                   <li><span className="text-[color:var(--accent)]">•</span> Tool-call frequency</li>
                   <li><span className="text-[color:var(--accent)]">•</span> Latency distributions</li>
                 </ul>
+                <div className="rounded border border-[var(--border-color)] bg-black/30 p-4 font-mono text-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[color:var(--text-muted)]">Stability Score:</span>
+                      <div className="flex-1 h-2 bg-gray-700 rounded overflow-hidden">
+                        <div className="h-full bg-green-500" style={{width: '87%'}}></div>
+                      </div>
+                      <span className="text-green-400">87%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[color:var(--text-muted)]">Avg Latency:</span>
+                      <span className="text-blue-400">1.2s</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[color:var(--text-muted)]">Tool Usage:</span>
+                      <span className="text-yellow-400">↑ 12%</span>
+                    </div>
+                  </div>
+                </div>
                 <p className="text-[color:var(--text-secondary)]">
                   See instability before users do.
                 </p>
@@ -256,9 +376,14 @@ export default function Home() {
 
               {/* SDK & CLI */}
               <div className="space-y-4">
-                <h3 className="text-2xl font-bold text-[color:var(--accent)]">
-                  Lightweight SDK & CLI
-                </h3>
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded bg-[var(--accent)]/10 border border-[var(--accent)] flex items-center justify-center text-[color:var(--accent)]">
+                    🧩
+                  </div>
+                  <h3 className="text-2xl font-bold text-[color:var(--accent)]">
+                    Lightweight SDK & CLI
+                  </h3>
+                </div>
                 <div className="rounded border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 font-mono text-sm">
                   <p className="text-[color:var(--text-muted)]"><span className="text-[color:var(--accent)]">$</span> regrada init</p>
                   <p className="text-[color:var(--text-muted)]"><span className="text-[color:var(--accent)]">$</span> regrada test</p>
@@ -281,6 +406,32 @@ export default function Home() {
             <h2 className="mb-12 text-center text-3xl font-bold text-[color:var(--text-primary)] md:text-5xl">
               How It Works
             </h2>
+
+            {/* Visual Flow */}
+            <div className="mb-12 rounded border border-[var(--border-color)] bg-[var(--surface-bg)] p-8">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex-1 text-center">
+                  <div className="mx-auto mb-2 h-16 w-16 rounded-full border-2 border-[var(--accent)] bg-[var(--accent)]/10 flex items-center justify-center text-2xl font-bold text-[color:var(--accent)]">1</div>
+                  <p className="text-sm text-[color:var(--text-muted)]">Define Tests</p>
+                </div>
+                <div className="hidden md:block text-[color:var(--accent)] text-2xl">→</div>
+                <div className="flex-1 text-center">
+                  <div className="mx-auto mb-2 h-16 w-16 rounded-full border-2 border-[var(--accent)] bg-[var(--accent)]/10 flex items-center justify-center text-2xl font-bold text-[color:var(--accent)]">2</div>
+                  <p className="text-sm text-[color:var(--text-muted)]">Run in CI</p>
+                </div>
+                <div className="hidden md:block text-[color:var(--accent)] text-2xl">→</div>
+                <div className="flex-1 text-center">
+                  <div className="mx-auto mb-2 h-16 w-16 rounded-full border-2 border-[var(--accent)] bg-[var(--accent)]/10 flex items-center justify-center text-2xl font-bold text-[color:var(--accent)]">3</div>
+                  <p className="text-sm text-[color:var(--text-muted)]">Compare</p>
+                </div>
+                <div className="hidden md:block text-[color:var(--accent)] text-2xl">→</div>
+                <div className="flex-1 text-center">
+                  <div className="mx-auto mb-2 h-16 w-16 rounded-full border-2 border-green-500 bg-green-500/10 flex items-center justify-center text-2xl font-bold text-green-400">✓</div>
+                  <p className="text-sm text-[color:var(--text-muted)]">Pass/Fail</p>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-6">
               <div className="flex gap-4">
                 <span className="text-2xl font-bold text-[color:var(--accent)]">1.</span>
