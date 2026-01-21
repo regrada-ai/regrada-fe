@@ -1,7 +1,14 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useId, useRef, useState, type ReactElement } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactElement,
+} from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -15,13 +22,22 @@ const THEME_OPTIONS: Array<{
   { value: "system", label: "System", Icon: ComputerDesktopIcon },
 ];
 
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+  const isHydrated = useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
-  const currentTheme = (theme ?? "system") as Theme;
+  const currentTheme = (isHydrated ? (theme ?? "system") : "system") as Theme;
   const currentOption =
     THEME_OPTIONS.find((option) => option.value === currentTheme) ??
     THEME_OPTIONS[2];

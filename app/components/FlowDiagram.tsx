@@ -126,7 +126,7 @@ export default function FlowDiagram({ steps }: FlowDiagramProps) {
                         <p className="text-base font-medium text-(--status-success)">
                           Tests Pass
                         </p>
-                        <p className="text-sm text-(--status-success)">
+                        <p className="text-sm text-(--text-secondary)">
                           All checks successful, ready to deploy
                         </p>
                       </div>

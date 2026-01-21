@@ -77,7 +77,7 @@ export default function Home() {
     <div className="flex min-h-screen flex-col bg-(--page-bg) font-mono text-(--text-primary)">
       <main className="flex flex-1 flex-col">
         {/* Hero Section */}
-        <section className="flex min-h-screen flex-col items-center justify-center px-4 pb-20 text-center">
+        <section className="flex min-h-screen flex-col items-center justify-center px-4 pb-20 pt-10 text-center sm:pt-16">
           <h1 className="mb-4 text-6xl font-bold text-(--text-primary) md:text-8xl">
             <span className="text-(--accent)">&gt;</span>
             regrada
@@ -115,21 +115,12 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <p className="text-(--code-muted)">
-                  <span className="text-(--accent)">$</span> regrada
-                  run --ci
+                  <span className="text-(--accent)">$</span> regrada run --ci
                 </p>
-                <p className="text-(--code-muted)">
-                  Running evaluations...
-                </p>
-                <p className="text-(--status-success)">
-                  ✓ refund_request
-                </p>
-                <p className="text-(--status-success)">
-                  ✓ product_question
-                </p>
-                <p className="text-(--status-error)">
-                  ✗ customer_greeting
-                </p>
+                <p className="text-(--code-muted)">Running evaluations...</p>
+                <p className="text-(--status-success)">✓ refund_request</p>
+                <p className="text-(--status-success)">✓ product_question</p>
+                <p className="text-(--status-error)">✗ customer_greeting</p>
                 <p className="text-(--status-warning) pl-4">
                   Regression: tool_called check failed
                 </p>
@@ -163,11 +154,7 @@ export default function Home() {
                 ✓ Thanks! We&apos;ll keep you updated.
               </p>
             )}
-            {error && (
-              <p className="mt-4 text-sm text-(--error)">
-                ✗ {error}
-              </p>
-            )}
+            {error && <p className="mt-4 text-sm text-(--error)">✗ {error}</p>}
           </form>
         </section>
 
@@ -188,16 +175,16 @@ export default function Home() {
             </p>
             <div className="space-y-2 text-left text-lg text-(--text-muted)">
               <p>
-                <span className="text-(--accent)">&gt;</span> Capture
-                LLM calls with a transparent proxy
+                <span className="text-(--accent)">&gt;</span> Capture LLM calls
+                with a transparent proxy
               </p>
               <p>
-                <span className="text-(--accent)">&gt;</span> Define
-                tests with prompts and checks
+                <span className="text-(--accent)">&gt;</span> Define tests with
+                prompts and checks
               </p>
               <p>
-                <span className="text-(--accent)">&gt;</span> Compare
-                results against baseline to detect regressions
+                <span className="text-(--accent)">&gt;</span> Compare results
+                against baseline to detect regressions
               </p>
             </div>
 
@@ -293,26 +280,26 @@ export default function Home() {
             <div className="grid gap-6 md:grid-cols-2">
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> AI
-                  startups shipping fast
+                  <span className="text-(--accent)">•</span> AI startups
+                  shipping fast
                 </p>
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> Teams
-                  running LLMs in production
+                  <span className="text-(--accent)">•</span> Teams running LLMs
+                  in production
                 </p>
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> Infra /
-                  platform engineers
+                  <span className="text-(--accent)">•</span> Infra / platform
+                  engineers
                 </p>
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span>{" "}
-                  Enterprises with compliance requirements
+                  <span className="text-(--accent)">•</span> Enterprises with
+                  compliance requirements
                 </p>
               </div>
             </div>
@@ -330,17 +317,16 @@ export default function Home() {
             </h2>
             <div className="space-y-6 text-center">
               <p className="text-xl text-(--text-secondary)">
-                <span className="text-(--accent)">•</span>{" "}
-                Traditional tests can&apos;t catch LLM behavior changes
+                <span className="text-(--accent)">•</span> Traditional tests
+                can&apos;t catch LLM behavior changes
               </p>
               <p className="text-xl text-(--text-secondary)">
-                <span className="text-(--accent)">•</span> Model
-                updates and prompt changes need the same rigor as code
+                <span className="text-(--accent)">•</span> Model updates and
+                prompt changes need the same rigor as code
               </p>
               <p className="text-xl text-(--text-secondary)">
-                <span className="text-(--accent)">•</span> Catching
-                regressions in CI is faster and cheaper than debugging in
-                production
+                <span className="text-(--accent)">•</span> Catching regressions
+                in CI is faster and cheaper than debugging in production
               </p>
               <p className="mt-8 text-2xl font-bold text-(--accent)">
                 Regrada makes AI systems testable and reliable.
@@ -382,9 +368,7 @@ export default function Home() {
                 </p>
               )}
               {error && (
-                <p className="mt-4 text-sm text-(--error)">
-                  ✗ {error}
-                </p>
+                <p className="mt-4 text-sm text-(--error)">✗ {error}</p>
               )}
             </form>
           </div>
