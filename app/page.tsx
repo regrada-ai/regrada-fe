@@ -102,6 +102,16 @@ export default function Home() {
             Automated testing for non-deterministic AI systems.
           </p>
 
+          {/* CTA Buttons */}
+          <div className="mb-8 flex gap-4">
+            <a
+              href="/docs"
+              className="rounded-xl border border-(--accent) bg-(--accent-bg) px-8 py-3 font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
+            >
+              View Documentation
+            </a>
+          </div>
+
           {/* Code Example */}
           <div className="mb-12 w-full max-w-2xl">
             <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 text-left font-mono text-sm shadow-lg">
@@ -115,17 +125,17 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <p className="text-(--code-muted)">
-                  <span className="text-(--accent)">$</span> regrada run --ci
+                  <span className="text-(--accent)">$</span> regrada test
                 </p>
-                <p className="text-(--code-muted)">Running evaluations...</p>
-                <p className="text-(--status-success)">✓ refund_request</p>
-                <p className="text-(--status-success)">✓ product_question</p>
-                <p className="text-(--status-error)">✗ customer_greeting</p>
+                <p className="text-(--code-muted)">Running test cases...</p>
+                <p className="text-(--status-success)">✓ greeting.hello</p>
+                <p className="text-(--status-success)">✓ refund.lookup</p>
+                <p className="text-(--status-error)">✗ customer.onboarding</p>
                 <p className="text-(--status-warning) pl-4">
-                  Regression: tool_called check failed
+                  Policy violation: assertions (min_pass_rate: 1.0)
                 </p>
                 <p className="text-(--status-error) font-bold mt-2">
-                  CI failed: 1 regression detected
+                  Total: 3 | Passed: 2 | Failed: 1
                 </p>
               </div>
             </div>
@@ -175,16 +185,16 @@ export default function Home() {
             </p>
             <div className="space-y-2 text-left text-lg text-(--text-muted)">
               <p>
-                <span className="text-(--accent)">&gt;</span> Capture LLM calls
-                with a transparent proxy
+                <span className="text-(--accent)">&gt;</span> Record LLM API
+                calls via HTTP proxy (regrada record)
               </p>
               <p>
-                <span className="text-(--accent)">&gt;</span> Define tests with
-                prompts and checks
+                <span className="text-(--accent)">&gt;</span> Convert traces
+                into YAML test cases (regrada accept)
               </p>
               <p>
-                <span className="text-(--accent)">&gt;</span> Compare results
-                against baseline to detect regressions
+                <span className="text-(--accent)">&gt;</span> Run cases against
+                baselines and enforce policies (regrada test)
               </p>
             </div>
 
@@ -243,27 +253,27 @@ export default function Home() {
               steps={[
                 {
                   number: 1,
-                  label: "Capture Traces",
+                  label: "Record Traffic",
                   description:
-                    "Run your code with regrada trace to capture LLM interactions via HTTP proxy",
+                    "Run regrada record to capture LLM API calls via HTTP proxy",
                 },
                 {
                   number: 2,
-                  label: "Define Tests",
+                  label: "Accept Traces",
                   description:
-                    "Write test cases in YAML with prompts and checks (schema, tool calls, content)",
+                    "Run regrada accept to convert recorded traces into YAML test cases and baseline snapshots",
                 },
                 {
                   number: 3,
-                  label: "Run Checks",
+                  label: "Run Tests",
                   description:
-                    "Run regrada run to evaluate traces against your test suite",
+                    "Run regrada test to execute cases, diff against baselines, and evaluate policies",
                 },
                 {
                   number: 4,
-                  label: "Compare with Baseline",
+                  label: "Enforce in CI",
                   description:
-                    "Compare results with baseline to detect regressions",
+                    "Integrate with GitHub Actions to block merges on policy violations",
                   canFail: true,
                 },
               ]}

@@ -3,89 +3,86 @@ import { FeatureCardProps } from "../components/FeatureCard";
 export const features: FeatureCardProps[] = [
   {
     icon: "🔍",
-    title: "Behavioral Regression Detection",
-    description: "Compare current behavior against baseline to detect:",
+    title: "Policy-Based Regression Detection",
+    description: "Configurable policies to detect behavioral changes:",
     items: [
-      "Changes in tool/function calls",
-      "Model output drift",
-      "Response structure violations",
-      "Token usage changes",
-      "Latency regressions",
+      "Assertions (min pass rate enforcement)",
+      "PII leak detection",
+      "Text variance checks (token Jaccard)",
+      "Refusal rate monitoring",
+      "Latency P95 thresholds",
     ],
-    footer: "Get notified when AI behavior silently changes between commits.",
+    footer: "Define policies as code and enforce them in CI.",
   },
   {
     icon: "🧪",
-    title: "Scenario-Based Testing for AI",
-    description: "Write tests in YAML with prompts and checks:",
+    title: "YAML Test Cases with Assertions",
+    description: "Define test cases with structured inputs and assertions:",
     items: [
-      "Schema validation",
-      "Tool call verification",
-      "Content matching (exact, contains, similarity)",
-      "Custom check types",
+      "Chat messages (system, user, assistant, tool)",
+      "Structured input (YAML map)",
+      "Text assertions (contains, max_chars)",
+      "JSON schema validation (parsed, not enforced yet)",
     ],
     codeExample: (
       <div className="rounded-xl border border-(--border-color) bg-(--code-bg) p-4 font-mono text-xs shadow-md">
-        <p className="text-(--code-purple)">tests:</p>
+        <p className="text-(--code-purple)">id:</p>
+        <p className="text-(--code-green)"> greeting.hello</p>
+        <p className="text-(--code-purple)">request:</p>
         <p className="text-(--code-muted)">
-          {" "}
-          -<span className="text-(--code-blue)"> name:</span>
-          <span className="text-(--code-green)"> refund_request</span>
+          {"  "}
+          <span className="text-(--code-blue)">messages:</span>
         </p>
         <p className="text-(--code-muted)">
-          {"   "}
-          <span className="text-(--code-blue)">prompt:</span>
-          <span className="text-(--code-green)">
-            {" "}
-            &quot;I want a refund&quot;
-          </span>
+          {"    - "}
+          <span className="text-(--code-blue)">role:</span>
+          <span className="text-(--code-green)"> user</span>
         </p>
         <p className="text-(--code-muted)">
-          {"   "}
-          <span className="text-(--code-blue)">checks:</span>
+          {"      "}
+          <span className="text-(--code-blue)">content:</span>
+          <span className="text-(--code-green)"> Say hello</span>
+        </p>
+        <p className="text-(--code-purple) mt-1">assert:</p>
+        <p className="text-(--code-muted)">
+          {"  "}
+          <span className="text-(--code-blue)">text:</span>
         </p>
         <p className="text-(--code-muted)">
-          {"     - "}
-          <span className="text-(--code-green)">
-            &quot;tool_called:refund.lookup&quot;
-          </span>
-        </p>
-        <p className="text-(--code-muted)">
-          {"     - "}
-          <span className="text-(--code-green)">
-            &quot;contains:order&quot;
-          </span>
+          {"    "}
+          <span className="text-(--code-blue)">contains:</span>
+          <span className="text-(--code-green)"> [&quot;hello&quot;]</span>
         </p>
       </div>
     ),
-    footer: "Define expected behavior declaratively.",
+    footer: "Cases are portable YAML files stored in your repo.",
   },
   {
     icon: "📊",
-    title: "Transparent Trace Capture",
-    description: "Regrada uses an HTTP proxy to capture LLM calls:",
+    title: "HTTP Proxy Recording (MITM)",
+    description: "Forward or reverse proxy to capture LLM API traffic:",
     items: [
-      "Zero code changes required",
-      "Records full request/response",
-      "Tracks tokens, latency, tool calls",
-      "Saves traces for comparison",
+      "HTTPS MITM with local CA (regrada ca init)",
+      "Records to .regrada/traces/ (JSONL)",
+      "Session files with metadata",
+      "Redaction presets (PII, secrets)",
     ],
     codeExample: (
       <div className="rounded-xl border border-(--border-color) bg-(--code-bg) p-4 font-mono text-xs shadow-md">
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada trace -- npm test
+          <span className="text-(--accent)">$</span> regrada record -- npm test
         </p>
         <p className="text-(--code-green) mt-2">
-          ✓ Proxy started on localhost:8080
+          ✓ Proxy listening on 127.0.0.1:8080
         </p>
-        <p className="text-(--code-green)">✓ Captured 3 LLM calls</p>
-        <p className="text-(--code-muted)] mt-2">Saved to .regrada/traces/</p>
-        <p className="text-(--code-muted)">- Model: gpt-4</p>
-        <p className="text-(--code-muted)">- Total tokens: 2,847</p>
-        <p className="text-(--code-muted)">- Tools called: 2</p>
+        <p className="text-(--code-green)">✓ Recorded 5 API calls</p>
+        <p className="text-(--code-muted) mt-2">Session saved to:</p>
+        <p className="text-(--code-muted)">
+          .regrada/sessions/20250123-143022.json
+        </p>
       </div>
     ),
-    footer: "Run your code normally — Regrada captures everything.",
+    footer: "Zero code changes — run your app through the proxy.",
   },
   {
     icon: "🚦",
@@ -133,15 +130,15 @@ export const features: FeatureCardProps[] = [
   },
   {
     icon: "🧠",
-    title: "Comprehensive Check Types",
-    description: "Built-in checks for:",
+    title: "Baseline Modes (Local & Git)",
+    description: "Store and compare baselines flexibly:",
     items: [
-      "Schema validation (JSON structure)",
-      "Tool call verification",
-      "Content matching (exact, contains, any)",
-      "Similarity scoring (cosine, Levenshtein)",
+      "Local mode: snapshots on filesystem",
+      "Git mode: read from git ref (origin/main)",
+      "Baselines keyed by case, provider, model, params",
+      "Automatic diff reporting",
     ],
-    footer: "Extensible check system for custom requirements.",
+    footer: "Version-control your baselines alongside code.",
   },
   {
     icon: "📈",
@@ -163,17 +160,11 @@ export const features: FeatureCardProps[] = [
           </div>
           <div className="flex items-center gap-2">
             <span className="text-(--code-muted)">Total Tokens:</span>
-            <span className="text-(--code-amber)">
-              2,847 → 3,102 (+9%)
-            </span>
+            <span className="text-(--code-amber)">2,847 → 3,102 (+9%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-(--code-muted)">
-              Tools Called:
-            </span>
-            <span className="text-(--code-red)">
-              2 → 3 (new: validate)
-            </span>
+            <span className="text-(--code-muted)">Tools Called:</span>
+            <span className="text-(--code-red)">2 → 3 (new: validate)</span>
           </div>
         </div>
       </div>
@@ -182,12 +173,15 @@ export const features: FeatureCardProps[] = [
   },
   {
     icon: "🧩",
-    title: "Lightweight SDK & CLI",
-    description: "Simple CLI. Zero dependencies.",
+    title: "Complete CLI Workflow",
+    description: "Full workflow from recording to testing:",
     items: [
-      "regrada init - Initialize your project",
-      "regrada trace -- <cmd> - Capture LLM calls",
-      "regrada run --ci - Run evaluations in CI",
+      "regrada init - Initialize config + example case",
+      "regrada record -- <cmd> - Capture LLM API calls",
+      "regrada accept - Convert traces to cases + baselines",
+      "regrada baseline - Generate baseline snapshots",
+      "regrada test - Run cases and enforce policies",
+      "regrada ca - Manage local CA for HTTPS MITM",
     ],
     codeExample: (
       <div className="rounded-xl border border-(--border-color) bg-(--code-bg) p-4 font-mono text-sm shadow-md">
@@ -195,14 +189,16 @@ export const features: FeatureCardProps[] = [
           <span className="text-(--accent)">$</span> regrada init
         </p>
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada trace --
-          npm test
+          <span className="text-(--accent)">$</span> regrada record -- npm test
         </p>
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada run --ci
+          <span className="text-(--accent)">$</span> regrada accept
+        </p>
+        <p className="text-(--code-muted)">
+          <span className="text-(--accent)">$</span> regrada test
         </p>
       </div>
     ),
-    footer: "Works locally and in any CI system.",
+    footer: "Simple, composable commands for any workflow.",
   },
 ];

@@ -11,6 +11,12 @@ export default function Footer() {
         <ThemeToggle />
         <span>© {CURRENT_YEAR} Regrada. All rights reserved.</span>
         <div className="flex flex-wrap items-center justify-center gap-4">
+          {/*<a
+            href="/docs"
+            className="text-(--accent) transition-colors hover:text-(--text-primary)"
+          >
+            Documentation
+          </a>*/}
           <a
             href="/privacy"
             className="text-(--accent) transition-colors hover:text-(--text-primary)"
