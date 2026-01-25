@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { authenticatedFetch, authAPI } from "../lib/api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Link from "next/link";
+import ProjectSelector from "../components/ProjectSelector";
 import {
   ApiKeyCreateResponse,
   ApiKeyRecord,
@@ -14,7 +18,7 @@ import {
 type DashboardConfig = {
   apiBaseUrl: string;
   projectId: string;
-  apiKey: string;
+  organizationId: string;
 };
 
 const CONFIG_STORAGE_KEY = "regrada.dashboard.config";
@@ -24,7 +28,7 @@ const envDefaults: DashboardConfig = {
   apiBaseUrl:
     process.env.NEXT_PUBLIC_REGRADA_API_BASE_URL ?? "http://localhost:8080",
   projectId: process.env.NEXT_PUBLIC_REGRADA_PROJECT_ID ?? "",
-  apiKey: "",
+  organizationId: "",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -74,42 +78,47 @@ const resolveStatus = (value?: string): RunStatus => {
   return "unknown";
 };
 
-const fetchJson = async <T,>(
-  url: string,
-  apiKey: string,
-  options: RequestInit = {},
-): Promise<T> => {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
-
-  let payload: unknown = null;
-  try {
-    payload = await response.json();
-  } catch (error) {
-    payload = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      (payload as { error?: { message?: string } })?.error?.message ||
-      response.statusText ||
-      `Request failed (${response.status})`;
-    throw new Error(message);
-  }
-
-  return payload as T;
-};
+// Removed - using authenticatedFetch from lib/api.ts instead
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
   const [config, setConfig] = useState<DashboardConfig>(envDefaults);
   const [configDraft, setConfigDraft] = useState<DashboardConfig>(envDefaults);
   const [configLoaded, setConfigLoaded] = useState(false);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await authAPI.me();
+        setUser(response.user);
+        if (response.user?.organization_id) {
+          setConfig((prev) => ({
+            ...prev,
+            organizationId: response.user.organization_id,
+          }));
+          setConfigDraft((prev) => ({
+            ...prev,
+            organizationId: response.user.organization_id,
+          }));
+        }
+      } catch (error) {
+        const status =
+          error && typeof error === "object" && "status" in error
+            ? (error as { status?: number }).status
+            : undefined;
+        if (status !== 401) {
+          console.error("Auth check failed:", error);
+        }
+        setUser(null);
+      } finally {
+        setUserLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
   const [traces, setTraces] = useState<TraceRecord[]>([]);
@@ -129,14 +138,16 @@ export default function DashboardPage() {
     () => normalizeBaseUrl(config.apiBaseUrl),
     [config.apiBaseUrl],
   );
-  const isConfigured = Boolean(apiBaseUrl && config.projectId && config.apiKey);
+  const isConfigured = Boolean(
+    apiBaseUrl && config.projectId && config.organizationId && user,
+  );
 
   useEffect(() => {
     const stored = localStorage.getItem(CONFIG_STORAGE_KEY);
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as DashboardConfig;
-        if (parsed?.apiBaseUrl && parsed?.projectId) {
+        if (parsed?.apiBaseUrl) {
           setConfig(parsed);
           setConfigDraft(parsed);
         }
@@ -182,19 +193,16 @@ export default function DashboardPage() {
       try {
         const [tracePayload, testRunPayload, apiKeyPayload] = await Promise.all(
           [
-            fetchJson<{ traces: TraceRecord[] }>(
+            authenticatedFetch<{ traces: TraceRecord[] }>(
               `${apiBaseUrl}/v1/projects/${config.projectId}/traces`,
-              config.apiKey,
               { signal: controller.signal },
             ),
-            fetchJson<{ test_runs: TestRunRecord[] }>(
+            authenticatedFetch<{ test_runs: TestRunRecord[] }>(
               `${apiBaseUrl}/v1/projects/${config.projectId}/test-runs`,
-              config.apiKey,
               { signal: controller.signal },
             ),
-            fetchJson<{ api_keys: ApiKeyRecord[] }>(
+            authenticatedFetch<{ api_keys: ApiKeyRecord[] }>(
               `${apiBaseUrl}/v1/api-keys`,
-              config.apiKey,
               { signal: controller.signal },
             ),
           ],
@@ -221,7 +229,7 @@ export default function DashboardPage() {
     loadData();
 
     return () => controller.abort();
-  }, [apiBaseUrl, config.apiKey, config.projectId, configLoaded, isConfigured]);
+  }, [apiBaseUrl, config.projectId, configLoaded, isConfigured]);
 
   const sortedTraces = useMemo(
     () =>
@@ -326,13 +334,18 @@ export default function DashboardPage() {
     const nextConfig: DashboardConfig = {
       apiBaseUrl: normalizeBaseUrl(configDraft.apiBaseUrl),
       projectId: configDraft.projectId.trim(),
-      apiKey: configDraft.apiKey.trim(),
+      organizationId: configDraft.organizationId.trim(),
     };
     setConfig(nextConfig);
     setConfigDraft(nextConfig);
     setLastCreatedKey(null);
     setCreateError(null);
     setCopyMessage(null);
+  };
+
+  const handleProjectChange = (projectId: string) => {
+    setConfigDraft((prev) => ({ ...prev, projectId }));
+    setConfig((prev) => ({ ...prev, projectId }));
   };
 
   const handleCreateKey = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -347,9 +360,8 @@ export default function DashboardPage() {
 
     setCreateLoading(true);
     try {
-      const payload = await fetchJson<ApiKeyCreateResponse>(
+      const payload = await authenticatedFetch<ApiKeyCreateResponse>(
         `${apiBaseUrl}/v1/api-keys`,
-        config.apiKey,
         {
           method: "POST",
           body: JSON.stringify({
@@ -395,19 +407,105 @@ export default function DashboardPage() {
     }
   };
 
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-(--page-bg) text-(--text-primary)">
+        <div className="text-center">
+          <div className="text-2xl font-semibold">Loading...</div>
+          <p className="mt-2 text-sm text-(--text-muted)">
+            Checking authentication
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if user is not authenticated
+  if (!user) {
+    return (
+      <div className="flex min-h-screen flex-col bg-(--page-bg) font-mono text-(--text-primary)">
+        <Header />
+        <main className="flex flex-1 items-center justify-center">
+          <div className="mx-auto max-w-md space-y-6 rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-8 text-center shadow-lg">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold">Welcome to Regrada</h1>
+              <p className="text-lg text-(--text-secondary)">
+                Please log in to access your dashboard
+              </p>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Link
+                href="/login"
+                className="rounded-xl border border-(--accent) bg-(--accent-bg) px-5 py-2 text-center text-sm font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
+              >
+                Log In
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-2 text-center text-sm font-semibold text-(--text-secondary) transition-all hover:border-(--accent) hover:text-(--accent)"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await authAPI.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      router.push("/login");
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-(--page-bg) font-mono text-(--text-primary)">
       <Header />
 
       <main className="relative flex-1 overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(47,95,153,0.18),_transparent_45%),radial-gradient(circle_at_80%_20%,_rgba(35,116,74,0.14),_transparent_40%),linear-gradient(180deg,_rgba(255,255,255,0.1),_transparent)]" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(47,95,153,0.18),transparent_45%),radial-gradient(circle_at_80%_20%,rgba(35,116,74,0.14),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.1),transparent)]" />
 
         <section className="border-b border-(--border-color) px-4 py-12">
           <div className="mx-auto flex max-w-7xl flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
             <div className="space-y-4">
-              <p className="text-xs uppercase tracking-[0.4em] text-(--text-muted)">
-                Dashboard
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs uppercase tracking-[0.4em] text-(--text-muted)">
+                  Dashboard
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    {user?.picture && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={user.picture}
+                        alt={user.name || "User profile"}
+                        className="h-8 w-8 rounded-full border border-(--border-color)"
+                      />
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold text-(--text-primary)">
+                        {user?.name}
+                      </span>
+                      <span className="text-xs text-(--text-muted)">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-2 text-sm font-semibold text-(--text-secondary) transition-all hover:border-(--accent) hover:text-(--accent)"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              </div>
               <h1 className="text-4xl font-bold md:text-5xl">
                 Behavior observability in motion.
               </h1>
@@ -463,43 +561,34 @@ export default function DashboardPage() {
                           apiBaseUrl: event.target.value,
                         }))
                       }
-                      placeholder="https://api.regrada.com"
+                      placeholder="http://localhost:8080"
                       className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
                     />
                   </div>
                   <div>
                     <label className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                      Project ID
+                      Organization ID
                     </label>
                     <input
-                      value={configDraft.projectId}
+                      value={configDraft.organizationId}
                       onChange={(event) =>
                         setConfigDraft((prev) => ({
                           ...prev,
-                          projectId: event.target.value,
+                          organizationId: event.target.value,
                         }))
                       }
-                      placeholder="project UUID"
+                      placeholder="organization UUID"
                       className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
                     />
                   </div>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                      API key
-                    </label>
-                    <input
-                      type="password"
-                      value={configDraft.apiKey}
-                      onChange={(event) =>
-                        setConfigDraft((prev) => ({
-                          ...prev,
-                          apiKey: event.target.value,
-                        }))
-                      }
-                      placeholder="rg_live_..."
-                      className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                  {config.organizationId && user && (
+                    <ProjectSelector
+                      apiBaseUrl={apiBaseUrl}
+                      organizationId={config.organizationId}
+                      selectedProjectId={config.projectId}
+                      onProjectChange={handleProjectChange}
                     />
-                  </div>
+                  )}
                   <button
                     type="submit"
                     className="w-full rounded-xl border border-(--accent) bg-(--accent-bg) px-4 py-2 text-sm font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
@@ -776,7 +865,7 @@ export default function DashboardPage() {
                                 {key.key_prefix}...
                               </td>
                               <td className="py-3 pr-4">
-                                <span className="rounded-full border border-(--border-color) px-3 py-1 text-xs uppercase tracking-[0.1em] text-(--text-muted)">
+                                <span className="rounded-full border border-(--border-color) px-3 py-1 text-xs uppercase tracking-widest text-(--text-muted)">
                                   {key.tier}
                                 </span>
                               </td>
