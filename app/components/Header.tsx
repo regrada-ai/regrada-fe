@@ -11,6 +11,7 @@ export default function Header() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-center">
           {mounted && (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={
                 resolvedTheme === "dark"
@@ -33,6 +34,12 @@ export default function Header() {
             className="text-(--text-secondary) transition-colors hover:text-(--accent)"
           >
             Home
+          </Link>
+          <Link
+            href="/dashboard"
+            className="text-(--text-secondary) transition-colors hover:text-(--accent)"
+          >
+            Dashboard
           </Link>
           <Link
             href="/docs"
