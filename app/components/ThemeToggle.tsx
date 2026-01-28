@@ -60,14 +60,22 @@ export default function ThemeToggle() {
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center" side="top" className="w-40">
+      <DropdownMenuContent
+        align="center"
+        side="top"
+        className="w-40 bg-(--surface-bg) border-2 border-(--border-color)"
+      >
         <DropdownMenuRadioGroup value={currentTheme} onValueChange={setTheme}>
           {THEME_OPTIONS.map(({ value, label, Icon }) => (
-            <DropdownMenuRadioItem key={value} value={value} className="gap-2">
+            <DropdownMenuRadioItem
+              key={value}
+              value={value}
+              className="gap-2 text-(--text-primary) focus:!bg-slate-700 focus:!text-white dark:focus:!bg-slate-200 dark:focus:!text-slate-900 data-[state=checked]:bg-(--accent-bg) data-[state=checked]:text-(--accent)"
+            >
               <span className="inline-flex h-5 w-5 items-center justify-center">
                 <Icon />
               </span>
-              <span>{label}</span>
+              <span className="font-medium">{label}</span>
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

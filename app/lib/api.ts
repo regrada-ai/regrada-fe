@@ -8,7 +8,8 @@ export interface User {
   id: string;
   email: string;
   name?: string;
-  picture?: string;
+  profile_picture?: string;
+  role?: string;
   organization_id?: string;
   created_at?: string;
   updated_at?: string;
@@ -209,5 +210,77 @@ export const organizationAPI = {
         method: "POST",
       },
     );
+  },
+};
+
+/**
+ * User API helpers
+ */
+export const userAPI = {
+  me: async () => {
+    return authenticatedFetch<{ user: User }>(`${API_BASE}/v1/users/me`);
+  },
+
+  get: async (userId: string) => {
+    return authenticatedFetch<{ user: User }>(`${API_BASE}/v1/users/${userId}`);
+  },
+
+  update: async (userId: string, updates: Partial<Pick<User, "name">>) => {
+    return authenticatedFetch<{ user: User }>(
+      `${API_BASE}/v1/users/${userId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(updates),
+      },
+    );
+  },
+
+  uploadProfilePicture: async (userId: string, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const url = `${API_BASE}/v1/users/${userId}/profile-picture`;
+    console.log("Uploading to URL:", url);
+    console.log("File:", file);
+
+    const response = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      let payload: unknown = null;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+      const message =
+        (payload as { error?: { message?: string } })?.error?.message ||
+        response.statusText ||
+        `Upload failed (${response.status})`;
+      const error = new Error(message) as ApiError;
+      error.status = response.status;
+      error.payload = payload;
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  deleteProfilePicture: async (userId: string) => {
+    return authenticatedFetch(
+      `${API_BASE}/v1/users/${userId}/profile-picture`,
+      {
+        method: "DELETE",
+      },
+    );
+  },
+
+  delete: async (userId: string) => {
+    return authenticatedFetch(`${API_BASE}/v1/users/${userId}`, {
+      method: "DELETE",
+    });
   },
 };

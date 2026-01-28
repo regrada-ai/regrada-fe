@@ -33,17 +33,13 @@ export default function Carousel({
     setCurrentIndex(index);
   }, []);
 
-  const goToPrevious = () => {
-    const isFirstSlide = currentIndex === 0;
-    const newIndex = isFirstSlide ? children.length - 1 : currentIndex - 1;
-    goToSlide(newIndex);
-  };
+  const goToPrevious = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + children.length) % children.length);
+  }, [children.length]);
 
   const goToNext = useCallback(() => {
-    const isLastSlide = currentIndex === children.length - 1;
-    const newIndex = isLastSlide ? 0 : currentIndex + 1;
-    goToSlide(newIndex);
-  }, [children.length, currentIndex, goToSlide]);
+    setCurrentIndex((prev) => (prev + 1) % children.length);
+  }, [children.length]);
 
   useEffect(() => {
     if (!autoPlay) return;
@@ -85,7 +81,10 @@ export default function Carousel({
   return (
     <div className="relative w-full">
       {/* Carousel Container */}
-      <div className="overflow-x-hidden py-12">
+      <div className="overflow-x-hidden py-12 relative">
+        {/* Fade overlays */}
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-(--page-bg) to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-(--page-bg) to-transparent z-10 pointer-events-none" />
         {isMobile ? (
           // Mobile: Simple centered layout with swipe
           <div
@@ -102,10 +101,11 @@ export default function Carousel({
             >
               {children.map((child, index) => {
                 return (
-                  <div key={index} className="shrink-0 w-full">
-                    <div className="h-full rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-xl">
-                      {child}
-                    </div>
+                  <div
+                    key={index}
+                    className="shrink-0 w-full min-h-[600px] flex"
+                  >
+                    {child}
                   </div>
                 );
               })}
@@ -126,19 +126,13 @@ export default function Carousel({
                 return (
                   <div
                     key={index}
-                    className={`shrink-0 w-112.5 transition-all duration-700 ${
+                    className={`shrink-0 w-112.5 min-h-[650px] flex transition-all duration-700 ${
                       isActive ? "opacity-100 scale-100" : "opacity-50 scale-95"
                     }`}
                     onClick={() => !isActive && goToSlide(index)}
                     style={{ cursor: !isActive ? "pointer" : "default" }}
                   >
-                    <div
-                      className={`h-full rounded-2xl border border-(--border-color) bg-(--surface-bg) p-8 transition-shadow duration-700 ${
-                        isActive ? "shadow-2xl" : "shadow-lg"
-                      }`}
-                    >
-                      {child}
-                    </div>
+                    {child}
                   </div>
                 );
               })}
