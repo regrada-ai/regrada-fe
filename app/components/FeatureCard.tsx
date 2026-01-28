@@ -28,10 +28,10 @@ export default function FeatureCard({
     <Card className="space-y-4 overflow-hidden h-full flex flex-col w-full">
       <CardHeader>
         <div className="flex items-start gap-3">
-          <div className="h-10 w-10 shrink-0 rounded-xl bg-(--accent)/10 border border-(--accent) flex items-center justify-center text-(--accent) text-xl">
+          <div className="h-10 w-10 shrink-0 rounded-xl bg-accent/10 border border-accent flex items-center justify-center text-accent text-xl">
             {icon}
           </div>
-          <CardTitle className="text-xl md:text-2xl font-bold text-(--accent) break-words">
+          <CardTitle className="text-xl md:text-2xl font-bold text-accent wrap-break-words">
             {title}
           </CardTitle>
         </div>
@@ -42,8 +42,8 @@ export default function FeatureCard({
       <CardContent className="space-y-4">
         <ul className="space-y-2 text-(--text-muted) text-sm">
           {items.map((item, index) => (
-            <li key={index} className="break-words">
-              <span className="text-(--accent)">•</span> {item}
+            <li key={index} className="wrap-break-words">
+              <span className="text-accent">•</span> {item}
             </li>
           ))}
         </ul>

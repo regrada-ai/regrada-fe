@@ -239,15 +239,14 @@ export const userAPI = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const url = `${API_BASE}/v1/users/${userId}/profile-picture`;
-    console.log("Uploading to URL:", url);
-    console.log("File:", file);
-
-    const response = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      body: formData,
-    });
+    const response = await fetch(
+      `${API_BASE}/v1/users/${userId}/profile-picture`,
+      {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      },
+    );
 
     if (!response.ok) {
       let payload: unknown = null;

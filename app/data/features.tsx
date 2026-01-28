@@ -70,7 +70,7 @@ export const features: FeatureCardProps[] = [
     codeExample: (
       <div className="rounded-xl border border-(--border-color) bg-(--code-bg) p-4 font-mono text-xs shadow-md">
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada record -- npm test
+          <span className="text-accent">$</span> regrada record -- npm test
         </p>
         <p className="text-(--code-green) mt-2">
           ✓ Proxy listening on 127.0.0.1:8080
@@ -186,16 +186,16 @@ export const features: FeatureCardProps[] = [
     codeExample: (
       <div className="rounded-xl border border-(--border-color) bg-(--code-bg) p-4 font-mono text-sm shadow-md">
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada init
+          <span className="text-accent">$</span> regrada init
         </p>
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada record -- npm test
+          <span className="text-accent">$</span> regrada record -- npm test
         </p>
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada accept
+          <span className="text-accent">$</span> regrada accept
         </p>
         <p className="text-(--code-muted)">
-          <span className="text-(--accent)">$</span> regrada test
+          <span className="text-accent">$</span> regrada test
         </p>
       </div>
     ),

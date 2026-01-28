@@ -233,7 +233,7 @@ export default function ApiKeysPage() {
                           onChange={(event) =>
                             setNewKeyTier(event.target.value as ApiKeyTier)
                           }
-                          className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                          className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) focus:border-accent focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
                         >
                           <option value="standard">Standard</option>
                           <option value="pro">Pro</option>
@@ -304,7 +304,7 @@ export default function ApiKeysPage() {
                           Copy key
                         </Button>
                         {copyMessage && (
-                          <span className="text-(--accent)">{copyMessage}</span>
+                          <span className="text-accent">{copyMessage}</span>
                         )}
                       </div>
                       <p className="mt-3 text-xs text-(--text-muted)">

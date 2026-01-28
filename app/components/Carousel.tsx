@@ -83,8 +83,8 @@ export default function Carousel({
       {/* Carousel Container */}
       <div className="overflow-x-hidden py-12 relative">
         {/* Fade overlays */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-(--page-bg) to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-(--page-bg) to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-linear-to-r from-(--page-bg) to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-(--page-bg) to-transparent z-10 pointer-events-none" />
         {isMobile ? (
           // Mobile: Simple centered layout with swipe
           <div
@@ -101,10 +101,7 @@ export default function Carousel({
             >
               {children.map((child, index) => {
                 return (
-                  <div
-                    key={index}
-                    className="shrink-0 w-full min-h-[600px] flex"
-                  >
+                  <div key={index} className="shrink-0 w-full min-h-150 flex">
                     {child}
                   </div>
                 );
@@ -126,7 +123,7 @@ export default function Carousel({
                 return (
                   <div
                     key={index}
-                    className={`shrink-0 w-112.5 min-h-[650px] flex transition-all duration-700 ${
+                    className={`shrink-0 w-112.5 min-h-162.5 flex transition-all duration-700 ${
                       isActive ? "opacity-100 scale-100" : "opacity-50 scale-95"
                     }`}
                     onClick={() => !isActive && goToSlide(index)}
@@ -149,8 +146,8 @@ export default function Carousel({
             onClick={() => goToSlide(index)}
             className={`h-2 rounded-full transition-all ${
               index === currentIndex
-                ? "w-8 bg-(--accent)"
-                : "w-2 bg-(--border-color) hover:bg-(--accent)/50"
+                ? "w-8 bg-accent"
+                : "w-2 bg-(--border-color) hover:bg-accent/50"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

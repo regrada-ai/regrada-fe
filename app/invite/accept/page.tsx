@@ -8,7 +8,12 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import Link from "next/link";
 
 function InviteAcceptContent() {
@@ -33,7 +38,7 @@ function InviteAcceptContent() {
       try {
         const response = await authAPI.me();
         setUser(response.user);
-      } catch (error) {
+      } catch {
         setUser(null);
       } finally {
         setUserLoading(false);
@@ -55,7 +60,9 @@ function InviteAcceptContent() {
         setInviteInfo(response);
       } catch (error) {
         setError(
-          error instanceof Error ? error.message : "Failed to load invite details",
+          error instanceof Error
+            ? error.message
+            : "Failed to load invite details",
         );
       } finally {
         setLoading(false);
@@ -128,13 +135,13 @@ function InviteAcceptContent() {
               <div className="space-y-3">
                 <Link
                   href={`/login?redirect=/invite/accept?token=${inviteToken}`}
-                  className="block w-full rounded-xl border border-(--accent) bg-(--accent-bg) px-5 py-3 text-center font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
+                  className="block w-full rounded-xl border border-accent bg-(--accent-bg) px-5 py-3 text-center font-semibold text-accent transition-all hover:bg-accent hover:text-(--button-hover-text)"
                 >
                   Sign In
                 </Link>
                 <Link
                   href={`/signup?invite_token=${inviteToken}`}
-                  className="block w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-3 text-center font-semibold text-(--text-secondary) transition-all hover:border-(--accent) hover:text-(--accent)"
+                  className="block w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-3 text-center font-semibold text-(--text-secondary) transition-all hover:border-accent hover:text-accent"
                 >
                   Create Account
                 </Link>
@@ -166,7 +173,7 @@ function InviteAcceptContent() {
 
             {success ? (
               <div className="space-y-4 text-center">
-                <Alert className="border-[var(--status-success-border)] bg-[var(--status-success-bg)] text-[var(--status-success)]">
+                <Alert className="border-(--status-success-border) bg-(--status-success-bg) text-(--status-success)">
                   <AlertDescription>
                     You&apos;ve successfully joined the organization!
                   </AlertDescription>
@@ -191,7 +198,10 @@ function InviteAcceptContent() {
 
                 <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4">
                   <p className="text-sm text-(--text-secondary)">
-                    Accepting as: <strong className="text-(--text-primary)">{user.email}</strong>
+                    Accepting as:{" "}
+                    <strong className="text-(--text-primary)">
+                      {user.email}
+                    </strong>
                   </p>
                 </div>
 

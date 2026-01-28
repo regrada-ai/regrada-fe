@@ -229,3 +229,24 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent horizontal scroll in docs */
+pre,
+code {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Code blocks in docs page */
+.font-mono pre {
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* Tables in docs */
+table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}

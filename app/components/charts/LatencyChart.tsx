@@ -27,7 +27,7 @@ const CustomTooltip = ({ active, payload }: any) => {
         <p className="text-sm font-semibold text-(--text-primary)">
           {payload[0].payload.label}
         </p>
-        <p className="text-sm text-(--accent)">
+        <p className="text-sm text-accent">
           {payload[0].value}ms
         </p>
       </div>

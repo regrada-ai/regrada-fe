@@ -60,7 +60,7 @@ export default function TestRunDetailDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-(--accent)">
+                <p className="text-2xl font-bold text-accent">
                   {testRun.total_cases}
                 </p>
               </CardContent>
@@ -113,7 +113,7 @@ export default function TestRunDetailDialog({
                     <span className="text-sm font-semibold text-(--text-secondary)">
                       Commit:
                     </span>
-                    <code className="text-sm text-(--accent)">
+                    <code className="text-sm text-accent">
                       {testRun.git_sha.slice(0, 7)}
                     </code>
                   </div>

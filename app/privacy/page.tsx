@@ -50,7 +50,7 @@ export default function PrivacyPage() {
           </h2>
 
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-(--accent)">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
               Information You Provide
             </h3>
             <ul className="list-disc space-y-2 pl-5 text-(--text-secondary)">
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-(--accent)">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
               Information Collected Automatically
             </h3>
             <ul className="list-disc space-y-2 pl-5 text-(--text-secondary)">
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-(--accent)">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
               Information from Third Parties
             </h3>
             <p className="text-(--text-secondary) leading-relaxed">
@@ -242,7 +242,7 @@ export default function PrivacyPage() {
             Email:{" "}
             <a
               href="mailto:privacy@regrada.com"
-              className="text-(--accent) transition-colors hover:text-(--text-primary)"
+              className="text-accent transition-colors hover:text-(--text-primary)"
             >
               privacy@regrada.com
             </a>

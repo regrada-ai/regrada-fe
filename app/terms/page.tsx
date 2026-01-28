@@ -262,7 +262,7 @@ export default function TermsPage() {
             Email:{" "}
             <a
               href="mailto:legal@regrada.com"
-              className="text-(--accent) transition-colors hover:text-(--text-primary)"
+              className="text-accent transition-colors hover:text-(--text-primary)"
             >
               legal@regrada.com
             </a>

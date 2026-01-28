@@ -81,9 +81,9 @@ export default function Home() {
         {/* Hero Section */}
         <section className="flex min-h-screen flex-col items-center justify-center px-4 pb-20 pt-10 text-center sm:pt-16">
           <h1 className="mb-4 text-6xl font-bold text-(--text-primary) md:text-8xl">
-            <span className="text-(--accent)">&gt;</span>
+            <span className="text-accent">&gt;</span>
             regrada
-            <span className="animate-blink text-(--accent)">_</span>
+            <span className="animate-blink text-accent">_</span>
           </h1>
 
           <p className="mt-2 mb-6 max-w-3xl text-2xl font-bold text-(--text-primary) md:text-4xl">
@@ -100,7 +100,7 @@ export default function Home() {
             commits.
           </p>
 
-          <p className="mb-8 text-lg text-(--accent) md:text-xl">
+          <p className="mb-8 text-lg text-accent md:text-xl">
             Automated testing for non-deterministic AI systems.
           </p>
 
@@ -108,7 +108,7 @@ export default function Home() {
           <div className="mb-8 flex gap-4">
             <a
               href="/docs"
-              className="rounded-xl border border-(--accent) bg-(--accent-bg) px-8 py-3 font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
+              className="rounded-xl border border-accent bg-(--accent-bg) px-8 py-3 font-semibold text-accent transition-all hover:bg-accent hover:text-(--button-hover-text)"
             >
               View Documentation
             </a>
@@ -127,7 +127,7 @@ export default function Home() {
               </div>
               <div className="space-y-1">
                 <p className="text-(--code-muted)">
-                  <span className="text-(--accent)">$</span> regrada test
+                  <span className="text-accent">$</span> regrada test
                 </p>
                 <p className="text-(--code-muted)">Running test cases...</p>
                 <p className="text-(--status-success)">✓ greeting.hello</p>
@@ -188,15 +188,15 @@ export default function Home() {
             </p>
             <div className="space-y-2 text-left text-lg text-(--text-muted)">
               <p>
-                <span className="text-(--accent)">&gt;</span> Record LLM API
-                calls via HTTP proxy (regrada record)
+                <span className="text-accent">&gt;</span> Record LLM API calls
+                via HTTP proxy (regrada record)
               </p>
               <p>
-                <span className="text-(--accent)">&gt;</span> Convert traces
-                into YAML test cases (regrada accept)
+                <span className="text-accent">&gt;</span> Convert traces into
+                YAML test cases (regrada accept)
               </p>
               <p>
-                <span className="text-(--accent)">&gt;</span> Run cases against
+                <span className="text-accent">&gt;</span> Run cases against
                 baselines and enforce policies (regrada test)
               </p>
             </div>
@@ -293,30 +293,30 @@ export default function Home() {
             <div className="grid gap-6 md:grid-cols-2">
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> AI startups
-                  shipping fast
+                  <span className="text-accent">•</span> AI startups shipping
+                  fast
                 </p>
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> Teams running LLMs
-                  in production
+                  <span className="text-accent">•</span> Teams running LLMs in
+                  production
                 </p>
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> Infra / platform
+                  <span className="text-accent">•</span> Infra / platform
                   engineers
                 </p>
               </div>
               <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg) p-6 shadow-md">
                 <p className="text-lg text-(--text-secondary)">
-                  <span className="text-(--accent)">•</span> Enterprises with
+                  <span className="text-accent">•</span> Enterprises with
                   compliance requirements
                 </p>
               </div>
             </div>
-            <p className="mt-8 text-center text-xl text-(--accent)">
+            <p className="mt-8 text-center text-xl text-accent">
               If AI is part of your critical path, you need Regrada.
             </p>
           </div>
@@ -330,18 +330,18 @@ export default function Home() {
             </h2>
             <div className="space-y-6 text-center">
               <p className="text-xl text-(--text-secondary)">
-                <span className="text-(--accent)">•</span> Traditional tests
+                <span className="text-accent">•</span> Traditional tests
                 can&apos;t catch LLM behavior changes
               </p>
               <p className="text-xl text-(--text-secondary)">
-                <span className="text-(--accent)">•</span> Model updates and
-                prompt changes need the same rigor as code
+                <span className="text-accent">•</span> Model updates and prompt
+                changes need the same rigor as code
               </p>
               <p className="text-xl text-(--text-secondary)">
-                <span className="text-(--accent)">•</span> Catching regressions
-                in CI is faster and cheaper than debugging in production
+                <span className="text-accent">•</span> Catching regressions in
+                CI is faster and cheaper than debugging in production
               </p>
-              <p className="mt-8 text-2xl font-bold text-(--accent)">
+              <p className="mt-8 text-2xl font-bold text-accent">
                 Regrada makes AI systems testable and reliable.
               </p>
             </div>

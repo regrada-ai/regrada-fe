@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authAPI } from "../lib/api";
@@ -283,7 +283,7 @@ function SignUpForm() {
               )}
 
               {inviteToken && (
-                <Alert className="border-[var(--status-success-border)] bg-[var(--status-success-bg)] text-[var(--status-success)]">
+                <Alert className="border-(--status-success-border) bg-(--status-success-bg) text-(--status-success)">
                   <AlertDescription>
                     You&apos;re signing up with an invite link. You&apos;ll join
                     the organization after verifying your account.
@@ -339,7 +339,7 @@ function SignUpForm() {
 
             <div className="text-center text-sm text-(--text-muted)">
               Already have an account?{" "}
-              <Link href="/login" className="text-(--accent) hover:underline">
+              <Link href="/login" className="text-accent hover:underline">
                 Sign in
               </Link>
             </div>
@@ -347,11 +347,11 @@ function SignUpForm() {
 
           <p className="text-center text-xs text-(--text-muted)">
             By signing up, you agree to our{" "}
-            <Link href="/terms" className="text-(--accent) hover:underline">
+            <Link href="/terms" className="text-accent hover:underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-(--accent) hover:underline">
+            <Link href="/privacy" className="text-accent hover:underline">
               Privacy Policy
             </Link>
           </p>

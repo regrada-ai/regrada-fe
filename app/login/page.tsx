@@ -150,7 +150,7 @@ function LoginForm() {
                   <Label htmlFor="password">Password</Label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs text-(--accent) hover:underline"
+                    className="text-xs text-accent hover:underline"
                   >
                     Forgot password?
                   </Link>
@@ -180,7 +180,7 @@ function LoginForm() {
 
             <div className="text-center text-sm text-(--text-muted)">
               Don&apos;t have an account?{" "}
-              <Link href="/signup" className="text-(--accent) hover:underline">
+              <Link href="/signup" className="text-accent hover:underline">
                 Sign up
               </Link>
             </div>

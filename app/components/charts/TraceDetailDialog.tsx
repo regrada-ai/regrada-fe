@@ -52,7 +52,7 @@ export default function TraceDetailDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-(--accent)">
+                <p className="text-2xl font-bold text-accent">
                   {latency}ms
                 </p>
               </CardContent>
@@ -64,7 +64,7 @@ export default function TraceDetailDialog({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold text-(--accent)">
+                <p className="text-2xl font-bold text-accent">
                   {totalTokens.toLocaleString()}
                 </p>
                 <div className="mt-1 flex gap-2 text-xs text-(--text-muted)">
@@ -95,7 +95,7 @@ export default function TraceDetailDialog({
             <CardContent>
               <div className="space-y-2">
                 <div className="flex items-start gap-3 border-b border-(--border-color) pb-2">
-                  <span className="text-sm font-semibold text-(--text-secondary) min-w-[120px]">
+                  <span className="text-sm font-semibold text-(--text-secondary) min-w-30">
                     Provider:
                   </span>
                   <span className="text-sm text-(--text-primary)">
@@ -104,7 +104,7 @@ export default function TraceDetailDialog({
                 </div>
                 {trace.environment && (
                   <div className="flex items-start gap-3 border-b border-(--border-color) pb-2">
-                    <span className="text-sm font-semibold text-(--text-secondary) min-w-[120px]">
+                    <span className="text-sm font-semibold text-(--text-secondary) min-w-30">
                       Environment:
                     </span>
                     <span className="text-sm text-(--text-primary)">
@@ -114,17 +114,17 @@ export default function TraceDetailDialog({
                 )}
                 {trace.git_sha && (
                   <div className="flex items-start gap-3 border-b border-(--border-color) pb-2">
-                    <span className="text-sm font-semibold text-(--text-secondary) min-w-[120px]">
+                    <span className="text-sm font-semibold text-(--text-secondary) min-w-30">
                       Git SHA:
                     </span>
-                    <code className="text-sm text-(--accent)">
+                    <code className="text-sm text-accent">
                       {trace.git_sha.slice(0, 7)}
                     </code>
                   </div>
                 )}
                 {trace.tags && trace.tags.length > 0 && (
                   <div className="flex items-start gap-3 pb-2">
-                    <span className="text-sm font-semibold text-(--text-secondary) min-w-[120px]">
+                    <span className="text-sm font-semibold text-(--text-secondary) min-w-30">
                       Tags:
                     </span>
                     <div className="flex flex-wrap gap-1">

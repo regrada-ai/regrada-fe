@@ -13,19 +13,19 @@ export default function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-4">
           {/*<a
             href="/docs"
-            className="text-(--accent) transition-colors hover:text-(--text-primary)"
+            className="text-accent transition-colors hover:text-(--text-primary)"
           >
             Documentation
           </a>*/}
           <a
             href="/privacy"
-            className="text-(--accent) transition-colors hover:text-(--text-primary)"
+            className="text-accent transition-colors hover:text-(--text-primary)"
           >
             Privacy Policy
           </a>
           <a
             href="/terms"
-            className="text-(--accent) transition-colors hover:text-(--text-primary)"
+            className="text-accent transition-colors hover:text-(--text-primary)"
           >
             Terms &amp; Conditions
           </a>

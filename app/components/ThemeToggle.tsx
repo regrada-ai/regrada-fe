@@ -50,7 +50,7 @@ export default function ThemeToggle() {
         >
           <span
             suppressHydrationWarning
-            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-(--accent-bg) text-(--accent)"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-(--accent-bg) text-accent"
           >
             <CurrentIcon />
           </span>
@@ -70,7 +70,7 @@ export default function ThemeToggle() {
             <DropdownMenuRadioItem
               key={value}
               value={value}
-              className="gap-2 text-(--text-primary) focus:!bg-slate-700 focus:!text-white dark:focus:!bg-slate-200 dark:focus:!text-slate-900 data-[state=checked]:bg-(--accent-bg) data-[state=checked]:text-(--accent)"
+              className="gap-2 text-(--text-primary) focus:bg-slate-700! focus:text-white! dark:focus:bg-slate-200! dark:focus:text-slate-900! data-[state=checked]:bg-(--accent-bg) data-[state=checked]:text-accent"
             >
               <span className="inline-flex h-5 w-5 items-center justify-center">
                 <Icon />

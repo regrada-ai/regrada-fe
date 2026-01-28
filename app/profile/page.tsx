@@ -197,7 +197,7 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="h-16 w-16 rounded-full bg-(--accent-bg) flex items-center justify-center border-2 border-(--border-color)">
-                            <span className="text-xl font-semibold text-(--accent)">
+                            <span className="text-xl font-semibold text-accent">
                               {(user.name || user.email)
                                 .charAt(0)
                                 .toUpperCase()}
@@ -206,11 +206,6 @@ export default function ProfilePage() {
                         )}
                         <div className="flex gap-2">
                           <input
-                            ref={(input) => {
-                              if (input) {
-                                (window as any).fileInput = input;
-                              }
-                            }}
                             type="file"
                             accept="image/*"
                             onChange={handleUploadPhoto}
@@ -389,8 +384,8 @@ export default function ProfilePage() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between rounded-lg border border-(--border-color) bg-(--page-bg) p-4">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-(--border-color) bg-(--page-bg) p-4">
+                    <div className="flex-1">
                       <p className="text-sm font-semibold text-(--text-primary)">
                         Password
                       </p>
@@ -398,19 +393,27 @@ export default function ProfilePage() {
                         Last changed: Never
                       </p>
                     </div>
-                    <Button variant="outline" disabled>
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full sm:w-auto whitespace-nowrap"
+                    >
                       Change Password
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between rounded-lg border border-(--border-color) bg-(--page-bg) p-4">
-                    <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-lg border border-(--border-color) bg-(--page-bg) p-4">
+                    <div className="flex-1">
                       <p className="text-sm font-semibold text-(--text-primary)">
                         Two-Factor Authentication
                       </p>
                       <p className="text-xs text-(--text-muted)">Not enabled</p>
                     </div>
-                    <Button variant="outline" disabled>
+                    <Button
+                      variant="outline"
+                      disabled
+                      className="w-full sm:w-auto whitespace-nowrap"
+                    >
                       Enable 2FA
                     </Button>
                   </div>

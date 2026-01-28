@@ -56,7 +56,7 @@ export default function FlowDiagram({ steps }: FlowDiagramProps) {
               <div
                 className={`shrink-0 h-12 w-12 rounded-full border-2 flex items-center justify-center text-xl font-bold transition-all duration-500 ${
                   isStepVisible
-                    ? "border-(--accent) bg-(--accent)/10 text-(--accent) scale-100 opacity-100"
+                    ? "border-accent bg-accent/10 text-accent scale-100 opacity-100"
                     : "border-(--border-color) bg-transparent text-(--text-muted) scale-75 opacity-0"
                 }`}
               >
@@ -67,7 +67,7 @@ export default function FlowDiagram({ steps }: FlowDiagramProps) {
               {!isLastStep && !step.canFail && (
                 <div className="flex-1 w-0.5 mt-2 mb-2">
                   <div
-                    className={`w-full h-full bg-(--accent) transition-all duration-500 delay-300 origin-top ${
+                    className={`w-full h-full bg-accent transition-all duration-500 delay-300 origin-top ${
                       isStepVisible
                         ? "scale-y-100 opacity-100"
                         : "scale-y-0 opacity-0"

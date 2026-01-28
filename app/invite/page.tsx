@@ -18,9 +18,6 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_REGRADA_API_BASE_URL ?? "http://localhost:8080";
-
 export default function InvitePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -47,7 +44,7 @@ export default function InvitePage() {
       try {
         const response = await authAPI.me();
         setUser(response.user);
-      } catch (error) {
+      } catch {
         router.push("/login");
       } finally {
         setUserLoading(false);
@@ -91,12 +88,6 @@ export default function InvitePage() {
 
     setLoading(true);
 
-    console.log("Creating invite with:", {
-      organizationId: user.organization_id,
-      email,
-      role,
-    });
-
     try {
       const response = await organizationAPI.createInvite(
         user.organization_id,
@@ -130,7 +121,7 @@ export default function InvitePage() {
     try {
       await navigator.clipboard.writeText(inviteUrl);
       setSuccess("Invite link copied to clipboard!");
-    } catch (error) {
+    } catch {
       setError("Failed to copy invite link");
     }
   };
@@ -186,7 +177,7 @@ export default function InvitePage() {
                   )}
 
                   {success && !inviteToken && (
-                    <Alert className="border-[var(--status-success-border)] bg-[var(--status-success-bg)] text-[var(--status-success)]">
+                    <Alert className="border-(--status-success-border) bg-(--status-success-bg) text-(--status-success)">
                       <AlertDescription>{success}</AlertDescription>
                     </Alert>
                   )}
@@ -210,7 +201,7 @@ export default function InvitePage() {
                       id="role"
                       value={role}
                       onChange={(e) => setRole(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                      className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) focus:border-accent focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
                     >
                       <option value="user">User</option>
                       <option value="admin">Admin</option>

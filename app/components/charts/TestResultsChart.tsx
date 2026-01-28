@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import type { LegendPayload } from "recharts/types/component/DefaultLegendContent";
 
 interface TestResultData {
   name: string;
@@ -21,7 +22,16 @@ interface TestResultsChartProps {
   failed: number;
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    name: string;
+    value: number;
+    payload: TestResultData;
+  }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-(--border-color) bg-(--surface-bg) p-3 shadow-lg">
@@ -37,16 +47,20 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function TestResultsChart({ passed, warning, failed }: TestResultsChartProps) {
+export default function TestResultsChart({
+  passed,
+  warning,
+  failed,
+}: TestResultsChartProps) {
   const data: TestResultData[] = [
     { name: "Passed", value: passed, color: "var(--status-success)" },
     { name: "Warning", value: warning, color: "var(--status-warning)" },
     { name: "Failed", value: failed, color: "var(--error)" },
-  ].filter(item => item.value > 0);
+  ].filter((item) => item.value > 0);
 
   if (data.length === 0) {
     return (
-      <div className="flex h-[200px] items-center justify-center">
+      <div className="flex h-50 items-center justify-center">
         <p className="text-sm text-(--text-muted)">No test data available</p>
       </div>
     );
@@ -73,11 +87,14 @@ export default function TestResultsChart({ passed, warning, failed }: TestResult
           verticalAlign="bottom"
           height={36}
           iconType="circle"
-          formatter={(value, entry: any) => (
-            <span style={{ color: "var(--text-primary)", fontSize: "12px" }}>
-              {value}: {entry.payload.value}
-            </span>
-          )}
+          formatter={(value: string | undefined, entry: LegendPayload) => {
+            const customPayload = entry.payload as unknown as TestResultData;
+            return (
+              <span style={{ color: "var(--text-primary)", fontSize: "12px" }}>
+                {value}: {customPayload.value}
+              </span>
+            );
+          }}
         />
       </PieChart>
     </ResponsiveContainer>
