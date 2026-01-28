@@ -10,7 +10,6 @@ import React, {
 } from "react";
 import { usePathname } from "next/navigation";
 import { authAPI, organizationAPI, Organization, User } from "../lib/api";
-import { isAuthenticatedClient } from "../lib/auth-utils";
 
 interface OrganizationContextType {
   user: User | null;
