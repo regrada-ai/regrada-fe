@@ -6,7 +6,7 @@ import { decodeJwt } from "jose";
 const protectedRoutes = ["/dashboard", "/profile", "/api-keys", "/invite"];
 
 // Routes that are always accessible (public)
-const publicRoutes = ["/docs", "/terms", "/privacy", "/accept-invite"];
+const publicRoutes = ["/", "/docs", "/terms", "/privacy", "/accept-invite"];
 
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ["/login", "/signup"];

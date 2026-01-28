@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Carousel from "./components/Carousel";
-import FeatureCard from "./components/FeatureCard";
-import FlowDiagram from "./components/FlowDiagram";
-import Footer from "./components/Footer";
-import { Input } from "./components/ui/input";
-import { Button } from "./components/ui/button";
-import { features } from "./data/features";
+import Carousel from "../components/Carousel";
+import FeatureCard from "../components/FeatureCard";
+import FlowDiagram from "../components/FlowDiagram";
+import Footer from "../components/Footer";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { features } from "../data/features";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -48,9 +48,9 @@ export default function Home() {
 
     try {
       // Call the Lambda function via API Gateway
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api/email-signup";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-      const response = await fetch(apiUrl, {
+      const response = await fetch(`${apiUrl}/v1/newsletter/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
