@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useOrganization } from "../contexts/OrganizationContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingScreen from "../components/LoadingScreen";
 import { Card, CardContent } from "../components/ui/card";
 
 export default function DashboardPage() {
@@ -20,16 +21,7 @@ export default function DashboardPage() {
 
   // Show loading state while checking authentication
   if (userLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-(--page-bg) text-(--text-primary)">
-        <div className="text-center">
-          <div className="text-2xl font-semibold">Loading...</div>
-          <p className="mt-2 text-sm text-(--text-muted)">
-            Checking authentication
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Return null while redirecting

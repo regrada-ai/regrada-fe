@@ -6,6 +6,7 @@ import { authenticatedFetch } from "../lib/api";
 import { useOrganization } from "../contexts/OrganizationContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingScreen from "../components/LoadingScreen";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -158,16 +159,7 @@ export default function ApiKeysPage() {
 
   // Show loading state while checking authentication
   if (userLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-(--page-bg) text-(--text-primary)">
-        <div className="text-center">
-          <div className="text-2xl font-semibold">Loading...</div>
-          <p className="mt-2 text-sm text-(--text-muted)">
-            Checking authentication
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Return null while redirecting
@@ -308,8 +300,8 @@ export default function ApiKeysPage() {
                         )}
                       </div>
                       <p className="mt-3 text-xs text-(--text-muted)">
-                        Make sure to copy your API key now. You won&apos;t be able to
-                        see it again!
+                        Make sure to copy your API key now. You won&apos;t be
+                        able to see it again!
                       </p>
                     </div>
                   )}

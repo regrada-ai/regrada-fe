@@ -72,7 +72,7 @@ function LoginForm() {
             )}
 
             {success && (
-              <Alert className="border-[var(--status-success-border)] bg-[var(--status-success-bg)] text-[var(--status-success)]">
+              <Alert className="border-(--status-success-border) bg-(--status-success-bg) text-(--status-success)">
                 <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}

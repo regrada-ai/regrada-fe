@@ -6,6 +6,7 @@ import { authAPI, organizationAPI } from "../lib/api";
 import type { User } from "../lib/api";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LoadingScreen from "../components/LoadingScreen";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -137,16 +138,7 @@ export default function InvitePage() {
   };
 
   if (userLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-(--page-bg) text-(--text-primary)">
-        <div className="text-center">
-          <div className="text-2xl font-semibold">Loading...</div>
-          <p className="mt-2 text-sm text-(--text-muted)">
-            Checking authentication
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
