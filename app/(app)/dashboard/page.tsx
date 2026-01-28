@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useOrganization } from "../contexts/OrganizationContext";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import LoadingScreen from "../components/LoadingScreen";
-import { Card, CardContent } from "../components/ui/card";
+import { useOrganization } from "../../contexts/OrganizationContext";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import LoadingScreen from "../../components/LoadingScreen";
+import { Card, CardContent } from "../../components/ui/card";
 
 export default function DashboardPage() {
   const router = useRouter();

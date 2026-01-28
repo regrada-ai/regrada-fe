@@ -8,7 +8,9 @@ import React, {
   ReactNode,
   useCallback,
 } from "react";
+import { usePathname } from "next/navigation";
 import { authAPI, organizationAPI, Organization, User } from "../lib/api";
+import { isAuthenticatedClient } from "../lib/auth-utils";
 
 interface OrganizationContextType {
   user: User | null;
@@ -26,6 +28,7 @@ const OrganizationContext = createContext<OrganizationContextType | undefined>(
 );
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [currentOrganizationId, setCurrentOrganizationId] = useState<
@@ -61,6 +64,12 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       }
     } catch (err) {
       // Silently fail if user is not authenticated - this is expected on login/signup pages
+      // 401 errors are normal and don't need to be logged or set as errors
+      setUser(null);
+      setOrganizations([]);
+      setCurrentOrganizationId(null);
+
+      // Only set error for non-401 errors
       const status =
         err && typeof err === "object" && "status" in err
           ? (err as { status?: number }).status
@@ -71,18 +80,27 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
           err instanceof Error ? err.message : "Failed to load user data",
         );
       }
-      setUser(null);
-      setOrganizations([]);
-      setCurrentOrganizationId(null);
     } finally {
       setLoading(false);
     }
-  }, [currentOrganizationId]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load user and organizations on mount
   useEffect(() => {
     loadUserAndOrganizations();
   }, [loadUserAndOrganizations]);
+
+  // Reload when navigating to protected routes (after login)
+  useEffect(() => {
+    const protectedRoutes = ["/dashboard", "/profile", "/api-keys", "/invite"];
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      pathname?.startsWith(route),
+    );
+
+    if (isProtectedRoute && !user && !loading) {
+      loadUserAndOrganizations();
+    }
+  }, [pathname, user, loading, loadUserAndOrganizations]);
 
   const currentOrganization =
     organizations.find((org) => org.id === currentOrganizationId) || null;
@@ -107,10 +125,18 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
 
 export function useOrganization() {
   const context = useContext(OrganizationContext);
+  // Return null values if outside provider (for public pages)
   if (context === undefined) {
-    throw new Error(
-      "useOrganization must be used within an OrganizationProvider",
-    );
+    return {
+      user: null,
+      organizations: [],
+      currentOrganization: null,
+      currentOrganizationId: null,
+      setCurrentOrganizationId: () => {},
+      refreshUser: async () => {},
+      loading: false,
+      error: null,
+    };
   }
   return context;
 }

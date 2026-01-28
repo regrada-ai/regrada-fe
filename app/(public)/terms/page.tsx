@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Footer from "../components/Footer";
+import Footer from "../../components/Footer";
 
 export default function TermsPage() {
   return (
@@ -27,9 +27,7 @@ export default function TermsPage() {
             Terms and Conditions
           </h1>
           <p className="text-sm text-(--text-muted)">
-            <strong className="text-(--text-primary)">
-              Last updated:
-            </strong>{" "}
+            <strong className="text-(--text-primary)">Last updated:</strong>{" "}
             January 16, 2026
           </p>
         </div>
@@ -37,9 +35,7 @@ export default function TermsPage() {
         <p className="text-(--text-secondary) leading-relaxed">
           These Terms of Service (&quot;Terms&quot;) govern your access to and
           use of the website, software, and services provided by{" "}
-          <strong className="text-(--text-primary)">
-            Regrada, Inc.
-          </strong>{" "}
+          <strong className="text-(--text-primary)">Regrada, Inc.</strong>{" "}
           (&quot;Regrada,&quot; &quot;we,&quot; &quot;us,&quot; or
           &quot;our&quot;) (collectively, the &quot;Service&quot;).
         </p>

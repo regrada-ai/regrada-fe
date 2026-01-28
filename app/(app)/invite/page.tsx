@@ -2,22 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { authAPI, organizationAPI } from "../lib/api";
-import type { User } from "../lib/api";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import LoadingScreen from "../components/LoadingScreen";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
+import { authAPI, organizationAPI } from "../../lib/api";
+import type { User } from "../../lib/api";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import LoadingScreen from "../../components/LoadingScreen";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 
 export default function InvitePage() {
   const router = useRouter();
@@ -117,7 +117,7 @@ export default function InvitePage() {
   const handleCopyInviteLink = async () => {
     if (!inviteToken) return;
 
-    const inviteUrl = `${window.location.origin}/invite/accept?token=${inviteToken}`;
+    const inviteUrl = `${window.location.origin}/accept-invite?token=${inviteToken}`;
 
     try {
       await navigator.clipboard.writeText(inviteUrl);
@@ -217,7 +217,7 @@ export default function InvitePage() {
                       Invite Link
                     </div>
                     <p className="break-all rounded-lg bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary)">
-                      {`${window.location.origin}/invite/accept?token=${inviteToken}`}
+                      {`${window.location.origin}/accept-invite?token=${inviteToken}`}
                     </p>
                     <Button
                       type="button"

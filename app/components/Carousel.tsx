@@ -82,9 +82,13 @@ export default function Carousel({
     <div className="relative w-full">
       {/* Carousel Container */}
       <div className="overflow-x-hidden py-12 relative">
-        {/* Fade overlays */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-linear-to-r from-(--page-bg) to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-(--page-bg) to-transparent z-10 pointer-events-none" />
+        {/* Fade overlays - only show on desktop */}
+        {!isMobile && (
+          <>
+            <div className="absolute left-0 top-0 bottom-0 w-32 bg-linear-to-r from-(--page-bg) to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-32 bg-linear-to-l from-(--page-bg) to-transparent z-10 pointer-events-none" />
+          </>
+        )}
         {isMobile ? (
           // Mobile: Simple centered layout with swipe
           <div

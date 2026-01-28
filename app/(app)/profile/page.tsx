@@ -2,21 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useOrganization } from "../contexts/OrganizationContext";
-import { userAPI } from "../lib/api";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import LoadingScreen from "../components/LoadingScreen";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { useOrganization } from "../../contexts/OrganizationContext";
+import { userAPI } from "../../lib/api";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import LoadingScreen from "../../components/LoadingScreen";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "../components/ui/card";
+} from "../../components/ui/card";
 
 export default function ProfilePage() {
   const router = useRouter();

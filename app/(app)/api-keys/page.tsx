@@ -2,27 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authenticatedFetch } from "../lib/api";
-import { useOrganization } from "../contexts/OrganizationContext";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import LoadingScreen from "../components/LoadingScreen";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
+import { authenticatedFetch } from "../../lib/api";
+import { useOrganization } from "../../contexts/OrganizationContext";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import LoadingScreen from "../../components/LoadingScreen";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "../components/ui/card";
-import { Badge } from "../components/ui/badge";
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import {
   ApiKeyCreateResponse,
   ApiKeyRecord,
   ApiKeyTier,
-} from "../data/dashboard";
+} from "../../data/dashboard";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_REGRADA_API_BASE_URL ?? "http://localhost:8080";

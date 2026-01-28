@@ -3,19 +3,17 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { authAPI } from "../lib/api";
-import { useOrganization } from "../contexts/OrganizationContext";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
+import { authAPI } from "../../lib/api";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Button } from "../../components/ui/button";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { refreshUser } = useOrganization();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -38,7 +36,6 @@ function LoginForm() {
 
     try {
       await authAPI.signIn(formData.email, formData.password);
-      await refreshUser();
       router.push("/dashboard");
     } catch (error) {
       setError(error instanceof Error ? error.message : "Sign in failed");

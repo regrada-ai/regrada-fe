@@ -1,21 +1,19 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { authAPI } from "../lib/api";
-import { useOrganization } from "../contexts/OrganizationContext";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-import { Alert, AlertDescription } from "../components/ui/alert";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Button } from "../components/ui/button";
+import { authAPI } from "../../lib/api";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import { Alert, AlertDescription } from "../../components/ui/alert";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Button } from "../../components/ui/button";
 
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading: userLoading } = useOrganization();
   const inviteToken = searchParams.get("invite_token");
 
   const [step, setStep] = useState<"signup" | "confirm">("signup");
@@ -30,13 +28,6 @@ function SignUpForm() {
   const [confirmCode, setConfirmCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Redirect to dashboard if already logged in
-  useEffect(() => {
-    if (!userLoading && user) {
-      router.push("/dashboard");
-    }
-  }, [user, userLoading, router]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();

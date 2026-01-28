@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAppTheme } from "../hooks";
 import { useOrganization } from "../contexts/OrganizationContext";
 import { authAPI } from "../lib/api";
+import { isAuthenticatedClient } from "../lib/auth-utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,11 +15,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Spinner } from "./ui/spinner";
 
 export default function Header() {
   const router = useRouter();
   const { resolvedTheme, mounted } = useAppTheme();
-  const { user, currentOrganization, refreshUser } = useOrganization();
+  const { user, currentOrganization, refreshUser, loading } = useOrganization();
+  const [authState, setAuthState] = useState<{
+    checked: boolean;
+    isAuthenticated: boolean;
+  }>({
+    checked: false,
+    isAuthenticated: false,
+  });
+
+  // Check if user is authenticated via cookies on mount
+  useEffect(() => {
+    setAuthState({
+      checked: true,
+      isAuthenticated: isAuthenticatedClient(),
+    });
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -27,7 +45,24 @@ export default function Header() {
     } catch (error) {
       console.error("Sign out error:", error);
     } finally {
-      router.push("/login");
+      // Only redirect to login if we're on a protected route
+      const protectedRoutes = [
+        "/dashboard",
+        "/profile",
+        "/api-keys",
+        "/invite",
+      ];
+      const currentPath = window.location.pathname;
+      const isProtectedRoute = protectedRoutes.some((route) =>
+        currentPath.startsWith(route),
+      );
+
+      if (isProtectedRoute) {
+        router.push("/login");
+      } else {
+        // Just refresh the page to update the header
+        router.refresh();
+      }
     }
   };
 
@@ -145,6 +180,13 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          ) : !authState.checked ||
+            loading ||
+            (authState.isAuthenticated && !user) ? (
+            // Still checking auth or loading user data or user is authenticated but data not loaded yet - show spinner to prevent flash
+            <div className="h-8 w-8 sm:h-10 sm:w-10 flex items-center justify-center shrink-0">
+              <Spinner className="h-5 w-5 sm:h-6 sm:w-6 text-accent" />
+            </div>
           ) : (
             <Link
               href="/login"

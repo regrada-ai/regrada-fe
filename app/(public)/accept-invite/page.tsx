@@ -134,7 +134,7 @@ function InviteAcceptContent() {
 
               <div className="space-y-3">
                 <Link
-                  href={`/login?redirect=/invite/accept?token=${inviteToken}`}
+                  href={`/login?redirect=/accept-invite?token=${inviteToken}`}
                   className="block w-full rounded-xl border border-accent bg-(--accent-bg) px-5 py-3 text-center font-semibold text-accent transition-all hover:bg-accent hover:text-(--button-hover-text)"
                 >
                   Sign In
