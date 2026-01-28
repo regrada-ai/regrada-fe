@@ -5,6 +5,8 @@ import Carousel from "./components/Carousel";
 import FeatureCard from "./components/FeatureCard";
 import FlowDiagram from "./components/FlowDiagram";
 import Footer from "./components/Footer";
+import { Input } from "./components/ui/input";
+import { Button } from "./components/ui/button";
 import { features } from "./data/features";
 
 export default function Home() {
@@ -143,21 +145,22 @@ export default function Home() {
 
           <form onSubmit={handleSubmit} className="w-full max-w-md">
             <div className="flex flex-col gap-4 sm:flex-row">
-              <input
+              <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="user@email.com"
                 required
-                className="flex-1 rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                className="flex-1"
               />
-              <button
+              <Button
                 type="submit"
                 disabled={isLoading}
-                className="rounded-xl border border-(--accent) bg-(--accent-bg) px-6 py-3 font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text) disabled:cursor-not-allowed disabled:opacity-50"
+                variant="default"
+                className="px-6 py-3 font-semibold"
               >
                 {isLoading ? "Submitting..." : "Join Waitlist"}
-              </button>
+              </Button>
             </div>
             {isSubmitted && (
               <p className="mt-4 text-sm text-(--success)">
@@ -356,21 +359,22 @@ export default function Home() {
             </p>
             <form onSubmit={handleSubmit} className="mx-auto w-full max-w-md">
               <div className="flex flex-col gap-4 sm:flex-row">
-                <input
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@email.com"
                   required
-                  className="flex-1 rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                  className="flex-1"
                 />
-                <button
+                <Button
                   type="submit"
                   disabled={isLoading}
-                  className="rounded-xl border border-(--accent) bg-(--accent-bg) px-6 py-3 font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text) disabled:cursor-not-allowed disabled:opacity-50"
+                  variant="default"
+                  className="px-6 py-3 font-semibold"
                 >
                   {isLoading ? "Submitting..." : "Join Waitlist"}
-                </button>
+                </Button>
               </div>
               {isSubmitted && (
                 <p className="mt-4 text-sm text-(--success)">

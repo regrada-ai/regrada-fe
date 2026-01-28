@@ -1,14 +1,15 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useSyncExternalStore, type ReactElement } from "react";
 import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ReactElement,
-} from "react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 type Theme = "light" | "dark" | "system";
 
@@ -28,9 +29,6 @@ const getServerSnapshot = () => false;
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [open, setOpen] = useState(false);
-  const menuId = useId();
-  const containerRef = useRef<HTMLDivElement>(null);
   const isHydrated = useSyncExternalStore(
     subscribe,
     getClientSnapshot,
@@ -43,86 +41,38 @@ export default function ThemeToggle() {
     THEME_OPTIONS[2];
   const CurrentIcon = currentOption.Icon;
 
-  useEffect(() => {
-    if (!open) return;
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [open]);
-
   return (
-    <div ref={containerRef} className="relative inline-flex">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-        className="inline-flex items-center gap-2 rounded-full border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-xs font-semibold text-(--text-secondary) shadow-sm transition-colors hover:text-(--text-primary) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/40"
-      >
-        <span
-          suppressHydrationWarning
-          className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-(--accent-bg) text-(--accent)"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-auto gap-2 rounded-full border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-xs font-semibold text-(--text-secondary) shadow-sm hover:text-(--text-primary)"
         >
-          <CurrentIcon />
-        </span>
-        <span suppressHydrationWarning>{currentOption.label}</span>
-        <span className="text-(--text-muted)">
-          <ChevronDownIcon />
-        </span>
-      </button>
-      {open && (
-        <div
-          id={menuId}
-          role="menu"
-          aria-orientation="vertical"
-          className="absolute bottom-full left-1/2 z-10 mb-2 w-40 -translate-x-1/2 rounded-xl border border-(--border-color) bg-(--surface-bg) p-1 shadow-lg"
-        >
-          {THEME_OPTIONS.map(({ value, label, Icon }) => {
-            const isActive = value === currentTheme;
-            return (
-              <button
-                key={value}
-                type="button"
-                role="menuitemradio"
-                aria-checked={isActive}
-                onClick={() => {
-                  setTheme(value);
-                  setOpen(false);
-                }}
-                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent)/40 ${
-                  isActive
-                    ? "bg-(--accent-bg) text-(--text-primary)"
-                    : "text-(--text-secondary) hover:bg-(--accent-bg) hover:text-(--text-primary)"
-                }`}
-              >
-                <span className="inline-flex h-5 w-5 items-center justify-center">
-                  <Icon />
-                </span>
-                <span>{label}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+          <span
+            suppressHydrationWarning
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-(--accent-bg) text-(--accent)"
+          >
+            <CurrentIcon />
+          </span>
+          <span suppressHydrationWarning>{currentOption.label}</span>
+          <span className="text-(--text-muted)">
+            <ChevronDownIcon />
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" side="top" className="w-40">
+        <DropdownMenuRadioGroup value={currentTheme} onValueChange={setTheme}>
+          {THEME_OPTIONS.map(({ value, label, Icon }) => (
+            <DropdownMenuRadioItem key={value} value={value} className="gap-2">
+              <span className="inline-flex h-5 w-5 items-center justify-center">
+                <Icon />
+              </span>
+              <span>{label}</span>
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

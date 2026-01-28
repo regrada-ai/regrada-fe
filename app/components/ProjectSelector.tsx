@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { authenticatedFetch } from "../lib/api";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 interface Project {
   id: string;
@@ -113,23 +121,21 @@ export default function ProjectSelector({
 
   return (
     <div className="relative">
-      <label className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+      <Label className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
         Project
-      </label>
-      <select
-        value={selectedProjectId || ""}
-        onChange={(e) => onProjectChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
-      >
-        <option value="" disabled>
-          Select a project
-        </option>
-        {projects.map((project) => (
-          <option key={project.id} value={project.id}>
-            {project.name} ({project.slug})
-          </option>
-        ))}
-      </select>
+      </Label>
+      <Select value={selectedProjectId || ""} onValueChange={onProjectChange}>
+        <SelectTrigger className="mt-2 w-full">
+          <SelectValue placeholder="Select a project" />
+        </SelectTrigger>
+        <SelectContent>
+          {projects.map((project) => (
+            <SelectItem key={project.id} value={project.id}>
+              {project.name} ({project.slug})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {selectedProject && (
         <p className="mt-1 text-xs text-(--text-muted)">
           ID: {selectedProject.id.slice(0, 8)}...

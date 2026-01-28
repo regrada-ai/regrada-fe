@@ -2,9 +2,23 @@
 
 import Link from "next/link";
 import { useAppTheme } from "../hooks";
+import { useOrganization } from "../contexts/OrganizationContext";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 
 export default function Header() {
   const { resolvedTheme, mounted } = useAppTheme();
+  const {
+    user,
+    organizations,
+    currentOrganizationId,
+    setCurrentOrganizationId,
+  } = useOrganization();
 
   return (
     <header className="sticky top-0 z-50 border-b border-(--border-color) bg-(--page-bg)/95 backdrop-blur">
@@ -28,7 +42,7 @@ export default function Header() {
             </span>
           )}
         </Link>
-        <nav className="flex gap-6">
+        <nav className="flex items-center gap-6">
           <Link
             href="/"
             className="text-(--text-secondary) transition-colors hover:text-(--accent)"
@@ -47,6 +61,31 @@ export default function Header() {
           >
             Docs
           </Link>
+          {user && organizations.length > 1 && (
+            <Select
+              value={currentOrganizationId || ""}
+              onValueChange={setCurrentOrganizationId}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select organization" />
+              </SelectTrigger>
+              <SelectContent>
+                {organizations.map((org) => (
+                  <SelectItem key={org.id} value={org.id}>
+                    {org.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {user && (
+            <Link
+              href="/invite"
+              className="rounded-xl border border-(--accent) bg-(--accent-bg) px-4 py-2 text-sm font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
+            >
+              Invite
+            </Link>
+          )}
         </nav>
       </div>
     </header>

@@ -2,11 +2,26 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authenticatedFetch, authAPI } from "../lib/api";
+import { authenticatedFetch, authAPI, type User } from "../lib/api";
+import { useOrganization } from "../contexts/OrganizationContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Link from "next/link";
 import ProjectSelector from "../components/ProjectSelector";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import LatencyChart from "../components/charts/LatencyChart";
+import TokenUsageChart from "../components/charts/TokenUsageChart";
+import TestResultsChart from "../components/charts/TestResultsChart";
+import TraceDetailDialog from "../components/charts/TraceDetailDialog";
+import TestRunDetailDialog from "../components/charts/TestRunDetailDialog";
 import {
   ApiKeyCreateResponse,
   ApiKeyRecord,
@@ -14,21 +29,21 @@ import {
   TraceRecord,
   TestRunRecord,
 } from "../data/dashboard";
+import { Label } from "../components/ui/label";
 
 type DashboardConfig = {
-  apiBaseUrl: string;
   projectId: string;
-  organizationId: string;
 };
 
 const CONFIG_STORAGE_KEY = "regrada.dashboard.config";
 const DEFAULT_SCOPES = ["traces:write", "tests:write", "projects:read"];
 
+// API base URL from environment variable
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_REGRADA_API_BASE_URL ?? "http://localhost:8080";
+
 const envDefaults: DashboardConfig = {
-  apiBaseUrl:
-    process.env.NEXT_PUBLIC_REGRADA_API_BASE_URL ?? "http://localhost:8080",
   projectId: process.env.NEXT_PUBLIC_REGRADA_PROJECT_ID ?? "",
-  organizationId: "",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -43,24 +58,28 @@ const numberFormatter = new Intl.NumberFormat("en-US");
 
 type RunStatus = "passed" | "warning" | "failed" | "unknown";
 
-const statusStyles: Record<RunStatus, { label: string; badge: string }> = {
+const statusStyles: Record<
+  RunStatus,
+  {
+    label: string;
+    variant: "status-success" | "status-warning" | "status-error" | "outline";
+  }
+> = {
   passed: {
     label: "Passed",
-    badge:
-      "border-(--status-success-border) bg-(--status-success-bg) text-(--status-success)",
+    variant: "status-success",
   },
   warning: {
     label: "Warning",
-    badge: "border-(--status-warning) bg-(--accent-bg) text-(--status-warning)",
+    variant: "status-warning",
   },
   failed: {
     label: "Failed",
-    badge:
-      "border-(--status-error-border) bg-(--status-error-bg) text-(--error)",
+    variant: "status-error",
   },
   unknown: {
     label: "Unknown",
-    badge: "border-(--border-color) bg-(--surface-bg) text-(--text-muted)",
+    variant: "outline",
   },
 };
 
@@ -68,7 +87,6 @@ const formatDate = (value?: string | null) =>
   value ? dateFormatter.format(new Date(value)) : "--";
 const formatNumber = (value: number) => numberFormatter.format(value);
 const shortSha = (sha?: string) => (sha ? sha.slice(0, 7) : "--");
-const normalizeBaseUrl = (value: string) => value.trim().replace(/\/$/, "");
 const toTimestamp = (value?: string) => (value ? Date.parse(value) : 0);
 
 const resolveStatus = (value?: string): RunStatus => {
@@ -82,43 +100,13 @@ const resolveStatus = (value?: string): RunStatus => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [userLoading, setUserLoading] = useState(true);
+  const {
+    user,
+    currentOrganizationId,
+    loading: userLoading,
+  } = useOrganization();
   const [config, setConfig] = useState<DashboardConfig>(envDefaults);
-  const [configDraft, setConfigDraft] = useState<DashboardConfig>(envDefaults);
   const [configLoaded, setConfigLoaded] = useState(false);
-
-  // Check authentication on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await authAPI.me();
-        setUser(response.user);
-        if (response.user?.organization_id) {
-          setConfig((prev) => ({
-            ...prev,
-            organizationId: response.user.organization_id,
-          }));
-          setConfigDraft((prev) => ({
-            ...prev,
-            organizationId: response.user.organization_id,
-          }));
-        }
-      } catch (error) {
-        const status =
-          error && typeof error === "object" && "status" in error
-            ? (error as { status?: number }).status
-            : undefined;
-        if (status !== 401) {
-          console.error("Auth check failed:", error);
-        }
-        setUser(null);
-      } finally {
-        setUserLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
 
   const [apiKeys, setApiKeys] = useState<ApiKeyRecord[]>([]);
   const [traces, setTraces] = useState<TraceRecord[]>([]);
@@ -134,12 +122,16 @@ export default function DashboardPage() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
 
-  const apiBaseUrl = useMemo(
-    () => normalizeBaseUrl(config.apiBaseUrl),
-    [config.apiBaseUrl],
+  // Dialog state for detail views
+  const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null);
+  const [selectedTestRun, setSelectedTestRun] = useState<TestRunRecord | null>(
+    null,
   );
+  const [traceDialogOpen, setTraceDialogOpen] = useState(false);
+  const [testRunDialogOpen, setTestRunDialogOpen] = useState(false);
+
   const isConfigured = Boolean(
-    apiBaseUrl && config.projectId && config.organizationId && user,
+    API_BASE_URL && config.projectId && currentOrganizationId && user,
   );
 
   useEffect(() => {
@@ -147,18 +139,15 @@ export default function DashboardPage() {
     if (stored) {
       try {
         const parsed = JSON.parse(stored) as DashboardConfig;
-        if (parsed?.apiBaseUrl) {
+        if (parsed?.projectId) {
           setConfig(parsed);
-          setConfigDraft(parsed);
         }
       } catch (error) {
         console.warn("Failed to read stored dashboard config", error);
         setConfig(envDefaults);
-        setConfigDraft(envDefaults);
       }
     } else {
       setConfig(envDefaults);
-      setConfigDraft(envDefaults);
     }
     setConfigLoaded(true);
   }, []);
@@ -194,15 +183,15 @@ export default function DashboardPage() {
         const [tracePayload, testRunPayload, apiKeyPayload] = await Promise.all(
           [
             authenticatedFetch<{ traces: TraceRecord[] }>(
-              `${apiBaseUrl}/v1/projects/${config.projectId}/traces`,
+              `${API_BASE_URL}/v1/projects/${config.projectId}/traces`,
               { signal: controller.signal },
             ),
             authenticatedFetch<{ test_runs: TestRunRecord[] }>(
-              `${apiBaseUrl}/v1/projects/${config.projectId}/test-runs`,
+              `${API_BASE_URL}/v1/projects/${config.projectId}/test-runs`,
               { signal: controller.signal },
             ),
             authenticatedFetch<{ api_keys: ApiKeyRecord[] }>(
-              `${apiBaseUrl}/v1/api-keys`,
+              `${API_BASE_URL}/v1/api-keys`,
               { signal: controller.signal },
             ),
           ],
@@ -229,7 +218,7 @@ export default function DashboardPage() {
     loadData();
 
     return () => controller.abort();
-  }, [apiBaseUrl, config.projectId, configLoaded, isConfigured]);
+  }, [config.projectId, configLoaded, isConfigured]);
 
   const sortedTraces = useMemo(
     () =>
@@ -321,31 +310,19 @@ export default function DashboardPage() {
       : isConfigured
         ? "Connected"
         : "Not configured";
-  const connectionBadge = dataLoading
-    ? "border-(--status-warning) bg-(--accent-bg) text-(--status-warning)"
+  const connectionVariant = dataLoading
+    ? "status-warning"
     : dataError
-      ? "border-(--status-error-border) bg-(--status-error-bg) text-(--error)"
+      ? "status-error"
       : isConfigured
-        ? "border-(--status-success-border) bg-(--status-success-bg) text-(--status-success)"
-        : "border-(--border-color) bg-(--surface-bg) text-(--text-muted)";
+        ? "status-success"
+        : ("outline" as const);
 
-  const handleConfigSave = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const nextConfig: DashboardConfig = {
-      apiBaseUrl: normalizeBaseUrl(configDraft.apiBaseUrl),
-      projectId: configDraft.projectId.trim(),
-      organizationId: configDraft.organizationId.trim(),
-    };
-    setConfig(nextConfig);
-    setConfigDraft(nextConfig);
+  const handleProjectChange = (projectId: string) => {
+    setConfig((prev) => ({ ...prev, projectId }));
     setLastCreatedKey(null);
     setCreateError(null);
     setCopyMessage(null);
-  };
-
-  const handleProjectChange = (projectId: string) => {
-    setConfigDraft((prev) => ({ ...prev, projectId }));
-    setConfig((prev) => ({ ...prev, projectId }));
   };
 
   const handleCreateKey = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -354,14 +331,14 @@ export default function DashboardPage() {
 
     if (!newKeyName.trim()) return;
     if (!isConfigured) {
-      setCreateError("Connect to the API before creating keys.");
+      setCreateError("Select a project before creating keys.");
       return;
     }
 
     setCreateLoading(true);
     try {
       const payload = await authenticatedFetch<ApiKeyCreateResponse>(
-        `${apiBaseUrl}/v1/api-keys`,
+        `${API_BASE_URL}/v1/api-keys`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -404,6 +381,40 @@ export default function DashboardPage() {
     } catch (error) {
       console.warn("Failed to copy", error);
       setCopyMessage("Copy failed");
+    }
+  };
+
+  // Prepare chart data from traces - MUST be before early returns
+  const latencyChartData = useMemo(() => {
+    return traces
+      .slice(0, 10)
+      .reverse()
+      .map((trace, index) => ({
+        timestamp: trace.timestamp,
+        latency: trace.metrics.latency_ms || 0,
+        label: `T${index + 1}`,
+      }));
+  }, [traces]);
+
+  const tokenChartData = useMemo(() => {
+    return traces
+      .slice(0, 10)
+      .reverse()
+      .map((trace, index) => ({
+        timestamp: trace.timestamp,
+        tokens:
+          (trace.metrics.tokens_in || 0) + (trace.metrics.tokens_out || 0),
+        label: `T${index + 1}`,
+      }));
+  }, [traces]);
+
+  const handleSignOut = async () => {
+    try {
+      await authAPI.signOut();
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      router.push("/login");
     }
   };
 
@@ -455,16 +466,6 @@ export default function DashboardPage() {
     );
   }
 
-  const handleSignOut = async () => {
-    try {
-      await authAPI.signOut();
-    } catch (error) {
-      console.error("Sign out error:", error);
-    } finally {
-      router.push("/login");
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col bg-(--page-bg) font-mono text-(--text-primary)">
       <Header />
@@ -498,12 +499,13 @@ export default function DashboardPage() {
                       </span>
                     </div>
                   </div>
-                  <button
+                  <Button
                     onClick={handleSignOut}
-                    className="rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-2 text-sm font-semibold text-(--text-secondary) transition-all hover:border-(--accent) hover:text-(--accent)"
+                    variant="secondary"
+                    className="px-5 py-2 text-sm font-semibold"
                   >
                     Log Out
-                  </button>
+                  </Button>
                 </div>
               </div>
               <h1 className="text-4xl font-bold md:text-5xl">
@@ -537,118 +539,85 @@ export default function DashboardPage() {
             </div>
 
             <div className="w-full max-w-md space-y-4">
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/85 p-6 shadow-lg backdrop-blur">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs uppercase tracking-[0.3em] text-(--text-muted)">
-                    Connection
-                  </div>
-                  <span
-                    className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase ${connectionBadge}`}
-                  >
-                    {connectionLabel}
-                  </span>
-                </div>
-                <form onSubmit={handleConfigSave} className="mt-4 space-y-3">
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                      API base URL
-                    </label>
-                    <input
-                      value={configDraft.apiBaseUrl}
-                      onChange={(event) =>
-                        setConfigDraft((prev) => ({
-                          ...prev,
-                          apiBaseUrl: event.target.value,
-                        }))
-                      }
-                      placeholder="http://localhost:8080"
-                      className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                      Organization ID
-                    </label>
-                    <input
-                      value={configDraft.organizationId}
-                      onChange={(event) =>
-                        setConfigDraft((prev) => ({
-                          ...prev,
-                          organizationId: event.target.value,
-                        }))
-                      }
-                      placeholder="organization UUID"
-                      className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
-                    />
-                  </div>
-                  {config.organizationId && user && (
-                    <ProjectSelector
-                      apiBaseUrl={apiBaseUrl}
-                      organizationId={config.organizationId}
-                      selectedProjectId={config.projectId}
-                      onProjectChange={handleProjectChange}
-                    />
-                  )}
-                  <button
-                    type="submit"
-                    className="w-full rounded-xl border border-(--accent) bg-(--accent-bg) px-4 py-2 text-sm font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text)"
-                  >
-                    Save settings
-                  </button>
-                </form>
-                {dataError && (
-                  <p className="mt-3 text-xs text-(--error)">{dataError}</p>
-                )}
-                {isConfigured && !dataError && (
-                  <p className="mt-3 text-xs text-(--text-muted)">
-                    Pulling data from {apiBaseUrl}
-                  </p>
-                )}
-              </div>
-
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/85 p-6 shadow-lg backdrop-blur">
-                <div className="text-xs uppercase tracking-[0.3em] text-(--text-muted)">
-                  Live status
-                </div>
-                <div className="mt-5 space-y-3 text-sm">
+              <Card className="rounded-2xl bg-(--surface-bg)/85 shadow-lg backdrop-blur">
+                <CardHeader className="px-6 pt-6 pb-0">
                   <div className="flex items-center justify-between">
-                    <span className="text-(--text-muted)">Latest run</span>
-                    {latestRun ? (
-                      <span
-                        className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${
-                          statusStyles[resolveStatus(latestRun.status)].badge
-                        }`}
-                      >
-                        {statusStyles[resolveStatus(latestRun.status)].label}
-                      </span>
-                    ) : (
-                      <span className="text-(--text-muted)">No runs</span>
+                    <div className="text-xs uppercase tracking-[0.3em] text-(--text-muted)">
+                      Connection
+                    </div>
+                    <Badge variant={connectionVariant}>{connectionLabel}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <div className="mt-4 space-y-3">
+                    {currentOrganizationId && (
+                      <ProjectSelector
+                        apiBaseUrl={API_BASE_URL}
+                        organizationId={currentOrganizationId}
+                        selectedProjectId={config.projectId}
+                        onProjectChange={handleProjectChange}
+                      />
                     )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-(--text-muted)">
-                      Policy violations
-                    </span>
-                    <span className="text-sm font-semibold">
-                      {isConfigured ? totalViolations : "--"}
-                    </span>
+                  {dataError && (
+                    <p className="mt-3 text-xs text-(--error)">{dataError}</p>
+                  )}
+                  {isConfigured && !dataError && (
+                    <p className="mt-3 text-xs text-(--text-muted)">
+                      Pulling data from {API_BASE_URL}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl bg-(--surface-bg)/85 shadow-lg backdrop-blur">
+                <CardHeader className="px-6 pt-6 pb-0">
+                  <div className="text-xs uppercase tracking-[0.3em] text-(--text-muted)">
+                    Live status
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-(--text-muted)">Trace volume</span>
-                    <span className="text-sm font-semibold">
-                      {isConfigured
-                        ? `${sortedTraces.length} in last 24h`
-                        : "--"}
-                    </span>
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
+                  <div className="mt-5 space-y-3 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-(--text-muted)">Latest run</span>
+                      {latestRun ? (
+                        <Badge
+                          variant={
+                            statusStyles[resolveStatus(latestRun.status)]
+                              .variant
+                          }
+                        >
+                          {statusStyles[resolveStatus(latestRun.status)].label}
+                        </Badge>
+                      ) : (
+                        <span className="text-(--text-muted)">No runs</span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-(--text-muted)">
+                        Policy violations
+                      </span>
+                      <span className="text-sm font-semibold">
+                        {isConfigured ? totalViolations : "--"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-(--text-muted)">Trace volume</span>
+                      <span className="text-sm font-semibold">
+                        {isConfigured
+                          ? `${sortedTraces.length} in last 24h`
+                          : "--"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-(--text-muted)">Avg latency</span>
+                      <span className="text-sm font-semibold">
+                        {isConfigured ? `${traceMetrics.avgLatency} ms` : "--"}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-(--text-muted)">Avg latency</span>
-                    <span className="text-sm font-semibold">
-                      {isConfigured ? `${traceMetrics.avgLatency} ms` : "--"}
-                    </span>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
@@ -656,49 +625,59 @@ export default function DashboardPage() {
         <section className="px-4 py-12">
           <div className="mx-auto max-w-7xl">
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                  Active keys
-                </p>
-                <p className="mt-3 text-3xl font-semibold">
-                  {formatNumber(apiKeys.length)}
-                </p>
-                <p className="mt-2 text-sm text-(--text-secondary)">
-                  Across {new Set(apiKeys.map((key) => key.tier)).size} tiers
-                </p>
-              </div>
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                  Tokens today
-                </p>
-                <p className="mt-3 text-3xl font-semibold">
-                  {formatNumber(traceMetrics.totalTokens)}
-                </p>
-                <p className="mt-2 text-sm text-(--text-secondary)">
-                  {formatNumber(traceMetrics.totalTokensIn)} in /{" "}
-                  {formatNumber(traceMetrics.totalTokensOut)} out
-                </p>
-              </div>
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                  Avg latency
-                </p>
-                <p className="mt-3 text-3xl font-semibold">
-                  {formatNumber(traceMetrics.avgLatency)} ms
-                </p>
-                <p className="mt-2 text-sm text-(--text-secondary)">
-                  P95 tracking available in traces
-                </p>
-              </div>
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
-                <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                  Latest pass rate
-                </p>
-                <p className="mt-3 text-3xl font-semibold">{latestPassRate}%</p>
-                <p className="mt-2 text-sm text-(--text-secondary)">
-                  {latestRun ? latestRun.total_cases : 0} cases evaluated
-                </p>
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
+                <CardContent className="p-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                    Active keys
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold">
+                    {formatNumber(apiKeys.length)}
+                  </p>
+                  <p className="mt-2 text-sm text-(--text-secondary)">
+                    Across {new Set(apiKeys.map((key) => key.tier)).size} tiers
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-2xl bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
+                <CardContent className="p-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                    Tokens today
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold">
+                    {formatNumber(traceMetrics.totalTokens)}
+                  </p>
+                  <p className="mt-2 text-sm text-(--text-secondary)">
+                    {formatNumber(traceMetrics.totalTokensIn)} in /{" "}
+                    {formatNumber(traceMetrics.totalTokensOut)} out
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-2xl bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
+                <CardContent className="p-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                    Avg latency
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold">
+                    {formatNumber(traceMetrics.avgLatency)} ms
+                  </p>
+                  <p className="mt-2 text-sm text-(--text-secondary)">
+                    P95 tracking available in traces
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="rounded-2xl bg-(--surface-bg)/80 p-5 shadow-sm backdrop-blur">
+                <CardContent className="p-0">
+                  <p className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                    Latest pass rate
+                  </p>
+                  <p className="mt-3 text-3xl font-semibold">
+                    {latestPassRate}%
+                  </p>
+                  <p className="mt-2 text-sm text-(--text-secondary)">
+                    {latestRun ? latestRun.total_cases : 0} cases evaluated
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
@@ -716,184 +695,195 @@ export default function DashboardPage() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                <form onSubmit={handleCreateKey} className="space-y-4">
-                  <div>
-                    <label className="text-sm text-(--text-secondary)">
-                      Key name
-                    </label>
-                    <input
-                      value={newKeyName}
-                      onChange={(event) => setNewKeyName(event.target.value)}
-                      placeholder="e.g. Production CI"
-                      className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) placeholder:text-(--text-placeholder) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
-                    />
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                <CardContent className="p-0">
+                  <form onSubmit={handleCreateKey} className="space-y-4">
                     <div>
-                      <label className="text-sm text-(--text-secondary)">
-                        Tier
-                      </label>
-                      <select
-                        value={newKeyTier}
-                        onChange={(event) =>
-                          setNewKeyTier(event.target.value as ApiKeyTier)
-                        }
-                        className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
-                      >
-                        <option value="standard">Standard</option>
-                        <option value="pro">Pro</option>
-                        <option value="enterprise">Enterprise</option>
-                      </select>
+                      <Label className="text-sm text-(--text-secondary)">
+                        Key name
+                      </Label>
+                      <Input
+                        value={newKeyName}
+                        onChange={(event) => setNewKeyName(event.target.value)}
+                        placeholder="e.g. Production CI"
+                        className="mt-2"
+                      />
                     </div>
-                    <div>
-                      <label className="text-sm text-(--text-secondary)">
-                        Default scopes
-                      </label>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {DEFAULT_SCOPES.map((scope) => (
-                          <button
-                            key={scope}
-                            type="button"
-                            onClick={() => toggleScope(scope)}
-                            className={`rounded-full border px-3 py-1 text-xs transition-all ${
-                              newKeyScopes.includes(scope)
-                                ? "border-(--accent) bg-(--accent-bg) text-(--accent)"
-                                : "border-(--border-color) text-(--text-muted) hover:border-(--accent)"
-                            }`}
-                          >
-                            {scope}
-                          </button>
-                        ))}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="text-sm text-(--text-secondary)">
+                          Tier
+                        </label>
+                        <select
+                          value={newKeyTier}
+                          onChange={(event) =>
+                            setNewKeyTier(event.target.value as ApiKeyTier)
+                          }
+                          className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-sm text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                        >
+                          <option value="standard">Standard</option>
+                          <option value="pro">Pro</option>
+                          <option value="enterprise">Enterprise</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm text-(--text-secondary)">
+                          Default scopes
+                        </label>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {DEFAULT_SCOPES.map((scope) => (
+                            <Button
+                              key={scope}
+                              type="button"
+                              onClick={() => toggleScope(scope)}
+                              variant={
+                                newKeyScopes.includes(scope)
+                                  ? "default"
+                                  : "outline"
+                              }
+                              className="rounded-full px-3 py-1 text-xs h-auto"
+                            >
+                              {scope}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={!isConfigured || createLoading}
-                    className="w-full rounded-xl border border-(--accent) bg-(--accent-bg) px-5 py-3 text-sm font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text) disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {createLoading ? "Generating..." : "Generate API key"}
-                  </button>
-                </form>
+                    <Button
+                      type="submit"
+                      disabled={!isConfigured || createLoading}
+                      variant="default"
+                      className="w-full px-5 py-3 text-sm font-semibold"
+                    >
+                      {createLoading ? "Generating..." : "Generate API key"}
+                    </Button>
+                  </form>
 
-                {!isConfigured && (
-                  <p className="mt-4 text-sm text-(--text-muted)">
-                    Add your API base URL, project ID, and API key to enable key
-                    creation.
-                  </p>
-                )}
-
-                {createError && (
-                  <p className="mt-4 text-sm text-(--error)">{createError}</p>
-                )}
-
-                {lastCreatedKey && (
-                  <div className="mt-6 rounded-xl border border-(--border-color) bg-(--page-bg) p-4">
-                    <div className="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-(--text-muted)">
-                      New key created
-                      <button
-                        type="button"
-                        onClick={() => setLastCreatedKey(null)}
-                        className="text-(--text-secondary) hover:text-(--accent)"
-                      >
-                        Hide
-                      </button>
-                    </div>
-                    <p className="mt-3 break-all rounded-lg bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary)">
-                      {lastCreatedKey}
+                  {!isConfigured && (
+                    <p className="mt-4 text-sm text-(--text-muted)">
+                      Select a project to enable key creation.
                     </p>
-                    <div className="mt-3 flex items-center gap-3 text-xs text-(--text-muted)">
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(lastCreatedKey)}
-                        className="rounded-full border border-(--border-color) px-3 py-1 text-(--text-secondary) transition-all hover:border-(--accent) hover:text-(--accent)"
-                      >
-                        Copy key
-                      </button>
-                      {copyMessage && (
-                        <span className="text-(--accent)">{copyMessage}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
 
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">Active keys</h3>
-                  <span className="rounded-full border border-(--border-color) px-3 py-1 text-xs text-(--text-muted)">
-                    {apiKeys.length} total
-                  </span>
-                </div>
-                <div className="mt-4">
-                  {!isConfigured ? (
-                    <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
-                      Connect to load active API keys.
-                    </div>
-                  ) : dataLoading ? (
-                    <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
-                      Loading API keys...
-                    </div>
-                  ) : apiKeys.length === 0 ? (
-                    <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
-                      No API keys found yet.
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-sm">
-                        <thead className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                          <tr>
-                            <th className="pb-3 pr-4">Name</th>
-                            <th className="pb-3 pr-4">Prefix</th>
-                            <th className="pb-3 pr-4">Tier</th>
-                            <th className="pb-3 pr-4">Scopes</th>
-                            <th className="pb-3">Last used</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-sm text-(--text-secondary)">
-                          {apiKeys.map((key) => (
-                            <tr
-                              key={key.id}
-                              className="border-t border-(--border-color)"
-                            >
-                              <td className="py-3 pr-4 font-semibold text-(--text-primary)">
-                                {key.name}
-                              </td>
-                              <td className="py-3 pr-4 text-(--text-muted)">
-                                {key.key_prefix}...
-                              </td>
-                              <td className="py-3 pr-4">
-                                <span className="rounded-full border border-(--border-color) px-3 py-1 text-xs uppercase tracking-widest text-(--text-muted)">
-                                  {key.tier}
-                                </span>
-                              </td>
-                              <td className="py-3 pr-4">
-                                <div className="flex flex-wrap gap-2">
-                                  {key.scopes.map((scope) => (
-                                    <span
-                                      key={scope}
-                                      className="rounded-full border border-(--border-color) px-2 py-1 text-xs text-(--text-muted)"
-                                    >
-                                      {scope}
-                                    </span>
-                                  ))}
-                                </div>
-                              </td>
-                              <td className="py-3">
-                                <span className="text-(--text-muted)">
-                                  {formatDate(key.last_used_at)}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  {createError && (
+                    <p className="mt-4 text-sm text-(--error)">{createError}</p>
+                  )}
+
+                  {lastCreatedKey && (
+                    <div className="mt-6 rounded-xl border border-(--border-color) bg-(--page-bg) p-4">
+                      <div className="flex items-center justify-between text-xs uppercase tracking-[0.25em] text-(--text-muted)">
+                        New key created
+                        <Button
+                          type="button"
+                          onClick={() => setLastCreatedKey(null)}
+                          variant="ghost"
+                          className="h-auto p-0 text-xs text-(--text-secondary)"
+                        >
+                          Hide
+                        </Button>
+                      </div>
+                      <p className="mt-3 break-all rounded-lg bg-(--surface-bg) px-3 py-2 text-sm text-(--text-primary)">
+                        {lastCreatedKey}
+                      </p>
+                      <div className="mt-3 flex items-center gap-3 text-xs text-(--text-muted)">
+                        <Button
+                          type="button"
+                          onClick={() => handleCopy(lastCreatedKey)}
+                          variant="outline"
+                          className="rounded-full px-3 py-1 text-xs h-auto"
+                        >
+                          Copy key
+                        </Button>
+                        {copyMessage && (
+                          <span className="text-(--accent)">{copyMessage}</span>
+                        )}
+                      </div>
                     </div>
                   )}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                <CardHeader className="p-0 pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-semibold">
+                      Active keys
+                    </CardTitle>
+                    <span className="rounded-full border border-(--border-color) px-3 py-1 text-xs text-(--text-muted)">
+                      {apiKeys.length} total
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="mt-4">
+                    {!isConfigured ? (
+                      <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
+                        Connect to load active API keys.
+                      </div>
+                    ) : dataLoading ? (
+                      <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
+                        Loading API keys...
+                      </div>
+                    ) : apiKeys.length === 0 ? (
+                      <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
+                        No API keys found yet.
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                          <thead className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                            <tr>
+                              <th className="pb-3 pr-4">Name</th>
+                              <th className="pb-3 pr-4">Prefix</th>
+                              <th className="pb-3 pr-4">Tier</th>
+                              <th className="pb-3 pr-4">Scopes</th>
+                              <th className="pb-3">Last used</th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-sm text-(--text-secondary)">
+                            {apiKeys.map((key) => (
+                              <tr
+                                key={key.id}
+                                className="border-t border-(--border-color)"
+                              >
+                                <td className="py-3 pr-4 font-semibold text-(--text-primary)">
+                                  {key.name}
+                                </td>
+                                <td className="py-3 pr-4 text-(--text-muted)">
+                                  {key.key_prefix}...
+                                </td>
+                                <td className="py-3 pr-4">
+                                  <span className="rounded-full border border-(--border-color) px-3 py-1 text-xs uppercase tracking-widest text-(--text-muted)">
+                                    {key.tier}
+                                  </span>
+                                </td>
+                                <td className="py-3 pr-4">
+                                  <div className="flex flex-wrap gap-2">
+                                    {key.scopes.map((scope) => (
+                                      <span
+                                        key={scope}
+                                        className="rounded-full border border-(--border-color) px-2 py-1 text-xs text-(--text-muted)"
+                                      >
+                                        {scope}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="py-3">
+                                  <span className="text-(--text-muted)">
+                                    {formatDate(key.last_used_at)}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
@@ -911,184 +901,146 @@ export default function DashboardPage() {
             </div>
 
             {!isConfigured ? (
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 text-sm text-(--text-muted)">
-                Configure your API connection to load trace data.
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6">
+                <CardContent className="p-0 text-sm text-(--text-muted)">
+                  Configure your API connection to load trace data.
+                </CardContent>
+              </Card>
             ) : dataLoading ? (
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 text-sm text-(--text-muted)">
-                Loading traces...
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6">
+                <CardContent className="p-0 text-sm text-(--text-muted)">
+                  Loading traces...
+                </CardContent>
+              </Card>
             ) : sortedTraces.length === 0 ? (
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 text-sm text-(--text-muted)">
-                No traces available yet for this project.
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6">
+                <CardContent className="p-0 text-sm text-(--text-muted)">
+                  No traces available yet for this project.
+                </CardContent>
+              </Card>
             ) : (
               <>
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-                  <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Latency trend</h3>
-                      <span className="text-xs text-(--text-muted)">
-                        {sortedTraces.length} samples
-                      </span>
-                    </div>
-                    <div className="mt-4 flex h-28 items-end gap-2">
-                      {sortedTraces.map((trace) => {
-                        const latency = trace.metrics?.latency_ms ?? 0;
-                        const height = traceMetrics.latencyMax
-                          ? Math.max(
-                              8,
-                              Math.round(
-                                (latency / traceMetrics.latencyMax) * 100,
-                              ),
-                            )
-                          : 8;
-                        return (
-                          <div
-                            key={trace.trace_id}
-                            className="flex h-full flex-1 items-end"
-                          >
-                            <div
-                              className="w-full rounded-md bg-(--accent)"
-                              style={{ height: `${height}%` }}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-(--text-muted)">
-                      <span>Lowest: {traceMetrics.latencyMin} ms</span>
-                      <span>Highest: {traceMetrics.latencyMax} ms</span>
-                    </div>
-                  </div>
+                  <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                    <CardHeader className="p-0 pb-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg font-semibold">
+                          Latency trend
+                        </CardTitle>
+                        <span className="text-xs text-(--text-muted)">
+                          {sortedTraces.length} samples
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <LatencyChart data={latencyChartData} />
+                    </CardContent>
+                  </Card>
 
-                  <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Token usage</h3>
-                      <span className="text-xs text-(--text-muted)">
-                        Inbound vs outbound
-                      </span>
-                    </div>
-                    <div className="mt-4 flex h-28 items-end gap-2">
-                      {sortedTraces.map((trace) => {
-                        const tokensIn = trace.metrics?.tokens_in ?? 0;
-                        const tokensOut = trace.metrics?.tokens_out ?? 0;
-                        const total = tokensIn + tokensOut;
-                        const maxValue = Math.max(traceMetrics.tokenMax, 1);
-                        const totalHeight = Math.max(
-                          8,
-                          Math.round((total / maxValue) * 100),
-                        );
-                        const outHeight = total
-                          ? Math.round((tokensOut / total) * totalHeight)
-                          : 0;
-                        const inHeight = totalHeight - outHeight;
-                        return (
-                          <div
-                            key={trace.trace_id}
-                            className="flex h-full flex-1 items-end"
-                          >
-                            <div className="flex h-full w-full flex-col justify-end">
-                              <div
-                                className="rounded-t-md bg-(--accent-bg)"
-                                style={{ height: `${inHeight}%` }}
-                              />
-                              <div
-                                className="rounded-b-md bg-(--accent)"
-                                style={{ height: `${outHeight}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs text-(--text-muted)">
-                      <span>
-                        In: {formatNumber(traceMetrics.totalTokensIn)}
-                      </span>
-                      <span>
-                        Out: {formatNumber(traceMetrics.totalTokensOut)}
-                      </span>
-                    </div>
-                  </div>
+                  <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                    <CardHeader className="p-0 pb-4">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg font-semibold">
+                          Token usage
+                        </CardTitle>
+                        <span className="text-xs text-(--text-muted)">
+                          Inbound vs outbound
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <TokenUsageChart data={tokenChartData} />
+                    </CardContent>
+                  </Card>
                 </div>
 
-                <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Recent traces</h3>
-                    <span className="text-xs text-(--text-muted)">
-                      Latest {sortedTraces.length} entries
-                    </span>
-                  </div>
-                  <div className="mt-4 overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                        <tr>
-                          <th className="pb-3 pr-4">Trace</th>
-                          <th className="pb-3 pr-4">Model</th>
-                          <th className="pb-3 pr-4">Latency</th>
-                          <th className="pb-3 pr-4">Tokens</th>
-                          <th className="pb-3 pr-4">Env</th>
-                          <th className="pb-3">Tags</th>
-                        </tr>
-                      </thead>
-                      <tbody className="text-(--text-secondary)">
-                        {sortedTraces.map((trace) => (
-                          <tr
-                            key={trace.trace_id}
-                            className="border-t border-(--border-color)"
-                          >
-                            <td className="py-3 pr-4 font-semibold text-(--text-primary)">
-                              {trace.trace_id.slice(0, 12)}...
-                              <div className="text-xs text-(--text-muted)">
-                                {formatDate(trace.timestamp)}
-                              </div>
-                            </td>
-                            <td className="py-3 pr-4">
-                              <div className="text-sm text-(--text-primary)">
-                                {trace.model}
-                              </div>
-                              <div className="text-xs text-(--text-muted)">
-                                {trace.provider}
-                              </div>
-                            </td>
-                            <td className="py-3 pr-4">
-                              {trace.metrics?.latency_ms ?? 0} ms
-                            </td>
-                            <td className="py-3 pr-4 text-xs text-(--text-muted)">
-                              {formatNumber(trace.metrics?.tokens_in ?? 0)} in /{" "}
-                              {formatNumber(trace.metrics?.tokens_out ?? 0)} out
-                            </td>
-                            <td className="py-3 pr-4 text-xs text-(--text-muted)">
-                              {trace.environment ?? "--"}
-                              <div className="text-xs text-(--text-muted)">
-                                {shortSha(trace.git_sha)}
-                              </div>
-                            </td>
-                            <td className="py-3">
-                              <div className="flex flex-wrap gap-2">
-                                {(trace.tags ?? []).length === 0 ? (
-                                  <span className="text-xs text-(--text-muted)">
-                                    --
-                                  </span>
-                                ) : (
-                                  trace.tags?.map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="rounded-full border border-(--border-color) px-2 py-1 text-xs text-(--text-muted)"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))
-                                )}
-                              </div>
-                            </td>
+                <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                  <CardHeader className="p-0 pb-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold">
+                        Recent traces
+                      </CardTitle>
+                      <span className="text-xs text-(--text-muted)">
+                        Latest {sortedTraces.length} entries
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead className="text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                          <tr>
+                            <th className="pb-3 pr-4">Trace</th>
+                            <th className="pb-3 pr-4">Model</th>
+                            <th className="pb-3 pr-4">Latency</th>
+                            <th className="pb-3 pr-4">Tokens</th>
+                            <th className="pb-3 pr-4">Env</th>
+                            <th className="pb-3">Tags</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                        </thead>
+                        <tbody className="text-(--text-secondary)">
+                          {sortedTraces.map((trace) => (
+                            <tr
+                              key={trace.trace_id}
+                              className="border-t border-(--border-color) cursor-pointer hover:bg-(--accent-bg) transition-colors"
+                              onClick={() => {
+                                setSelectedTrace(trace);
+                                setTraceDialogOpen(true);
+                              }}
+                            >
+                              <td className="py-3 pr-4 font-semibold text-(--text-primary)">
+                                {trace.trace_id.slice(0, 12)}...
+                                <div className="text-xs text-(--text-muted)">
+                                  {formatDate(trace.timestamp)}
+                                </div>
+                              </td>
+                              <td className="py-3 pr-4">
+                                <div className="text-sm text-(--text-primary)">
+                                  {trace.model}
+                                </div>
+                                <div className="text-xs text-(--text-muted)">
+                                  {trace.provider}
+                                </div>
+                              </td>
+                              <td className="py-3 pr-4">
+                                {trace.metrics?.latency_ms ?? 0} ms
+                              </td>
+                              <td className="py-3 pr-4 text-xs text-(--text-muted)">
+                                {formatNumber(trace.metrics?.tokens_in ?? 0)} in
+                                / {formatNumber(trace.metrics?.tokens_out ?? 0)}{" "}
+                                out
+                              </td>
+                              <td className="py-3 pr-4 text-xs text-(--text-muted)">
+                                {trace.environment ?? "--"}
+                                <div className="text-xs text-(--text-muted)">
+                                  {shortSha(trace.git_sha)}
+                                </div>
+                              </td>
+                              <td className="py-3">
+                                <div className="flex flex-wrap gap-2">
+                                  {(trace.tags ?? []).length === 0 ? (
+                                    <span className="text-xs text-(--text-muted)">
+                                      --
+                                    </span>
+                                  ) : (
+                                    trace.tags?.map((tag) => (
+                                      <span
+                                        key={tag}
+                                        className="rounded-full border border-(--border-color) px-2 py-1 text-xs text-(--text-muted)"
+                                      >
+                                        {tag}
+                                      </span>
+                                    ))
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
               </>
             )}
           </div>
@@ -1108,128 +1060,148 @@ export default function DashboardPage() {
             </div>
 
             {!isConfigured ? (
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 text-sm text-(--text-muted)">
-                Configure your API connection to load test runs.
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6">
+                <CardContent className="p-0 text-sm text-(--text-muted)">
+                  Configure your API connection to load test runs.
+                </CardContent>
+              </Card>
             ) : dataLoading ? (
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 text-sm text-(--text-muted)">
-                Loading test runs...
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6">
+                <CardContent className="p-0 text-sm text-(--text-muted)">
+                  Loading test runs...
+                </CardContent>
+              </Card>
             ) : sortedTestRuns.length === 0 ? (
-              <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 text-sm text-(--text-muted)">
-                No test runs available yet for this project.
-              </div>
+              <Card className="rounded-2xl bg-(--surface-bg)/90 p-6">
+                <CardContent className="p-0 text-sm text-(--text-muted)">
+                  No test runs available yet for this project.
+                </CardContent>
+              </Card>
             ) : (
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Recent runs</h3>
-                    <span className="text-xs text-(--text-muted)">
-                      {sortedTestRuns.length} runs
-                    </span>
-                  </div>
-                  <div className="mt-4 space-y-4">
-                    {sortedTestRuns.map((run) => {
-                      const status = statusStyles[resolveStatus(run.status)];
-                      const totalCases = run.total_cases || 0;
-                      const passPercent = totalCases
-                        ? Math.round((run.passed_cases / totalCases) * 100)
-                        : 0;
-                      const warnPercent = totalCases
-                        ? Math.round((run.warned_cases / totalCases) * 100)
-                        : 0;
-                      const failPercent = totalCases
-                        ? Math.round((run.failed_cases / totalCases) * 100)
-                        : 0;
+                <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                  <CardHeader className="p-0 pb-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg font-semibold">
+                        Recent runs
+                      </CardTitle>
+                      <span className="text-xs text-(--text-muted)">
+                        {sortedTestRuns.length} runs
+                      </span>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="mt-4 space-y-4">
+                      {sortedTestRuns.map((run) => {
+                        const status = statusStyles[resolveStatus(run.status)];
+                        const totalCases = run.total_cases || 0;
+                        const passPercent = totalCases
+                          ? Math.round((run.passed_cases / totalCases) * 100)
+                          : 0;
+                        const warnPercent = totalCases
+                          ? Math.round((run.warned_cases / totalCases) * 100)
+                          : 0;
+                        const failPercent = totalCases
+                          ? Math.round((run.failed_cases / totalCases) * 100)
+                          : 0;
 
-                      return (
-                        <div
-                          key={run.run_id}
-                          className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4"
-                        >
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div>
-                              <p className="text-sm font-semibold text-(--text-primary)">
-                                {run.run_id.slice(0, 14)}...
-                              </p>
-                              <p className="text-xs text-(--text-muted)">
-                                {formatDate(run.timestamp)} ·{" "}
-                                {shortSha(run.git_sha)} ·{" "}
-                                {run.git_branch ?? "--"}
-                              </p>
+                        return (
+                          <div
+                            key={run.run_id}
+                            className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 cursor-pointer hover:border-(--accent) transition-colors"
+                            onClick={() => {
+                              setSelectedTestRun(run);
+                              setTestRunDialogOpen(true);
+                            }}
+                          >
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold text-(--text-primary)">
+                                  {run.run_id.slice(0, 14)}...
+                                </p>
+                                <p className="text-xs text-(--text-muted)">
+                                  {formatDate(run.timestamp)} ·{" "}
+                                  {shortSha(run.git_sha)} ·{" "}
+                                  {run.git_branch ?? "--"}
+                                </p>
+                              </div>
+                              <Badge variant={status.variant}>
+                                {status.label}
+                              </Badge>
                             </div>
-                            <span
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${status.badge}`}
-                            >
-                              {status.label}
-                            </span>
-                          </div>
-                          <div className="mt-4 flex items-center gap-4">
-                            <div className="flex-1">
-                              <div className="flex h-2 overflow-hidden rounded-full bg-(--surface-bg)">
-                                <span
-                                  className="bg-(--status-success)"
-                                  style={{ width: `${passPercent}%` }}
-                                />
-                                <span
-                                  className="bg-(--status-warning)"
-                                  style={{ width: `${warnPercent}%` }}
-                                />
-                                <span
-                                  className="bg-(--status-error)"
-                                  style={{ width: `${failPercent}%` }}
-                                />
+                            <div className="mt-4 flex items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex h-2 overflow-hidden rounded-full bg-(--surface-bg)">
+                                  <span
+                                    className="bg-(--status-success)"
+                                    style={{ width: `${passPercent}%` }}
+                                  />
+                                  <span
+                                    className="bg-(--status-warning)"
+                                    style={{ width: `${warnPercent}%` }}
+                                  />
+                                  <span
+                                    className="bg-(--status-error)"
+                                    style={{ width: `${failPercent}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="text-xs text-(--text-muted)">
+                                {passPercent}% pass
                               </div>
                             </div>
-                            <div className="text-xs text-(--text-muted)">
-                              {passPercent}% pass
+                            <div className="mt-3 flex flex-wrap gap-3 text-xs text-(--text-muted)">
+                              <span>{run.total_cases} total</span>
+                              <span>{run.passed_cases} passed</span>
+                              <span>{run.warned_cases} warned</span>
+                              <span>{run.failed_cases} failed</span>
                             </div>
                           </div>
-                          <div className="mt-3 flex flex-wrap gap-3 text-xs text-(--text-muted)">
-                            <span>{run.total_cases} total</span>
-                            <span>{run.passed_cases} passed</span>
-                            <span>{run.warned_cases} warned</span>
-                            <span>{run.failed_cases} failed</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
 
-                <div className="rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-6 shadow-sm">
-                  <h3 className="text-lg font-semibold">Policy violations</h3>
-                  <p className="mt-2 text-sm text-(--text-secondary)">
-                    Ordered by severity with direct policy identifiers from
-                    regrada-be.
-                  </p>
-                  <div className="mt-4 space-y-3">
-                    {allViolations.length === 0 ? (
-                      <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
-                        No active violations. All policies are within
-                        guardrails.
-                      </div>
-                    ) : (
-                      allViolations.map((violation, index) => (
-                        <div
-                          key={`${violation.policy_id}-${index}`}
-                          className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4"
-                        >
-                          <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-(--text-muted)">
-                            <span>{violation.policy_id}</span>
-                            <span>{violation.severity}</span>
-                          </div>
-                          <p className="mt-3 text-sm text-(--text-primary)">
-                            {violation.message}
-                          </p>
-                          <p className="mt-2 text-xs text-(--text-muted)">
-                            Triggered in {violation.run.slice(0, 12)}...
-                          </p>
+                <Card className="rounded-2xl bg-(--surface-bg)/90 p-6 shadow-sm">
+                  <CardHeader className="p-0 pb-2">
+                    <CardTitle className="text-lg font-semibold">
+                      Policy violations
+                    </CardTitle>
+                    <p className="mt-2 text-sm text-(--text-secondary)">
+                      Ordered by severity with direct policy identifiers from
+                      regrada-be.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="mt-4 space-y-3">
+                      {allViolations.length === 0 ? (
+                        <div className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4 text-sm text-(--text-muted)">
+                          No active violations. All policies are within
+                          guardrails.
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
+                      ) : (
+                        allViolations.map((violation, index) => (
+                          <div
+                            key={`${violation.policy_id}-${index}`}
+                            className="rounded-xl border border-(--border-color) bg-(--page-bg) p-4"
+                          >
+                            <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-(--text-muted)">
+                              <span>{violation.policy_id}</span>
+                              <span>{violation.severity}</span>
+                            </div>
+                            <p className="mt-3 text-sm text-(--text-primary)">
+                              {violation.message}
+                            </p>
+                            <p className="mt-2 text-xs text-(--text-muted)">
+                              Triggered in {violation.run.slice(0, 12)}...
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
           </div>
@@ -1237,6 +1209,18 @@ export default function DashboardPage() {
       </main>
 
       <Footer />
+
+      {/* Detail View Dialogs */}
+      <TraceDetailDialog
+        trace={selectedTrace}
+        open={traceDialogOpen}
+        onOpenChange={setTraceDialogOpen}
+      />
+      <TestRunDetailDialog
+        testRun={selectedTestRun}
+        open={testRunDialogOpen}
+        onOpenChange={setTestRunDialogOpen}
+      />
     </div>
   );
 }

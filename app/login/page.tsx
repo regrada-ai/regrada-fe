@@ -1,46 +1,53 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { authAPI } from '../lib/api';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { authAPI } from "../lib/api";
+import { useOrganization } from "../contexts/OrganizationContext";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Button } from "../components/ui/button";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshUser } = useOrganization();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get('verified') === 'true') {
-      setSuccess('Email verified successfully! Please sign in.');
+    if (searchParams.get("verified") === "true") {
+      setSuccess("Email verified successfully! Please sign in.");
     }
   }, [searchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
       await authAPI.signIn(formData.email, formData.password);
-      router.push('/dashboard');
+      await refreshUser();
+      router.push("/dashboard");
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Sign in failed');
+      setError(error instanceof Error ? error.message : "Sign in failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialSignIn = async (provider: 'Google' | 'Apple') => {
+  const handleSocialSignIn = async (provider: "Google" | "Apple") => {
     // TODO: Implement social login with backend
     setError(`${provider} sign in will be available soon`);
   };
@@ -59,22 +66,23 @@ export default function LoginPage() {
 
           <div className="space-y-4 rounded-2xl border border-(--border-color) bg-(--surface-bg)/90 p-8 shadow-lg">
             {error && (
-              <div className="rounded-xl border border-(--error) bg-(--status-error-bg) p-4 text-sm text-(--error)">
-                {error}
-              </div>
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
             {success && (
-              <div className="rounded-xl border border-(--status-success-border) bg-(--status-success-bg) p-4 text-sm text-(--status-success)">
-                {success}
-              </div>
+              <Alert className="border-[var(--status-success-border)] bg-[var(--status-success-bg)] text-[var(--status-success)]">
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
             )}
 
             {/* Social Sign In Buttons */}
-            <button
-              onClick={() => handleSocialSignIn('Google')}
+            <Button
+              onClick={() => handleSocialSignIn("Google")}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-3 font-semibold text-(--text-primary) transition-all hover:border-(--accent) hover:bg-(--accent-bg) disabled:cursor-not-allowed disabled:opacity-50"
+              variant="secondary"
+              className="w-full px-5 py-3 font-semibold text-(--text-primary) hover:bg-(--accent-bg)"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path
@@ -95,76 +103,83 @@ export default function LoginPage() {
                 />
               </svg>
               Continue with Google
-            </button>
+            </Button>
 
-            <button
-              onClick={() => handleSocialSignIn('Apple')}
+            <Button
+              onClick={() => handleSocialSignIn("Apple")}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-3 rounded-xl border border-(--border-color) bg-(--surface-bg) px-5 py-3 font-semibold text-(--text-primary) transition-all hover:border-(--accent) hover:bg-(--accent-bg) disabled:cursor-not-allowed disabled:opacity-50"
+              variant="secondary"
+              className="w-full px-5 py-3 font-semibold text-(--text-primary) hover:bg-(--accent-bg)"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
               Continue with Apple
-            </button>
+            </Button>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-(--border-color)" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="bg-(--surface-bg) px-4 text-(--text-muted)">Or continue with email</span>
+                <span className="bg-(--surface-bg) px-4 text-(--text-muted)">
+                  Or continue with email
+                </span>
               </div>
             </div>
 
             {/* Email Sign In Form */}
             <form onSubmit={handleSignIn} className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-(--text-secondary)">
-                  Email Address
-                </label>
-                <input
+                <Label htmlFor="email">Email Address</Label>
+                <Input
                   id="email"
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   placeholder="you@example.com"
+                  className="mt-2"
                 />
               </div>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <label htmlFor="password" className="block text-sm font-medium text-(--text-secondary)">
-                    Password
-                  </label>
-                  <Link href="/forgot-password" className="text-xs text-(--accent) hover:underline">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-(--accent) hover:underline"
+                  >
                     Forgot password?
                   </Link>
                 </div>
-                <input
+                <Input
                   id="password"
                   type="password"
                   required
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="mt-2 w-full rounded-xl border border-(--border-color) bg-(--surface-bg) px-4 py-3 text-(--text-primary) focus:border-(--accent) focus:outline-none focus:ring-2 focus:ring-(--accent)/20"
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   placeholder="••••••••"
+                  className="mt-2"
                 />
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-xl border border-(--accent) bg-(--accent-bg) px-5 py-3 font-semibold text-(--accent) transition-all hover:bg-(--accent) hover:text-(--button-hover-text) disabled:cursor-not-allowed disabled:opacity-50"
+                variant="default"
+                className="w-full px-5 py-3 font-semibold"
               >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
             </form>
 
             <div className="text-center text-sm text-(--text-muted)">
-              Don&apos;t have an account?{' '}
+              Don&apos;t have an account?{" "}
               <Link href="/signup" className="text-(--accent) hover:underline">
                 Sign up
               </Link>
@@ -174,5 +189,19 @@ export default function LoginPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-(--page-bg) font-mono">
+          <div className="text-(--text-muted)">Loading...</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
