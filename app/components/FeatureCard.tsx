@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-Regrada-Proprietary
 import React from "react";
 
 export interface FeatureCardProps {

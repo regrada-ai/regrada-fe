@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-Regrada-Proprietary
 "use client";
 
 import ThemeToggle from "./ThemeToggle";

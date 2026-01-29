@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-Regrada-Proprietary
 import { FeatureCardProps } from "../components/FeatureCard";
 
 export const features: FeatureCardProps[] = [
