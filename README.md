@@ -2,8 +2,8 @@
 
 ## License
 
-This project is proprietary software owned by Regrada, Inc.
-All rights reserved.
+This project is proprietary software licensed under the Regrada
+proprietary license. All rights reserved.
 
 No use, reproduction, modification, or distribution is permitted
-without explicit written authorization from Regrada, Inc.
+without explicit authorization.
