@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-Regrada-Proprietary
 import { defineBackend } from '@aws-amplify/backend';
 import { emailSignup } from './email-signup/resource';
 

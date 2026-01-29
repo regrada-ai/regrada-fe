@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-Regrada-Proprietary
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { SESv2Client, CreateContactCommand, SendEmailCommand as SendEmailCommandV2 } from '@aws-sdk/client-sesv2';
 

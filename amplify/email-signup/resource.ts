@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LicenseRef-Regrada-Proprietary
 import { defineFunction } from '@aws-amplify/backend';
 
 export const emailSignup = defineFunction({
